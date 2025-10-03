@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Puzzle Challenge - Event Game</title>
+    <title>Event Game - تحدي الصور</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- تحميل مكتبة Tone.js للمؤثرات الصوتية -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <style>
         /* إعداد الخطوط والخلفية الشاملة */
         @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700;900&display=swap');
@@ -22,40 +24,56 @@
             position: relative;
         }
 
-        /* تنسيق الهيدر والتايمر */
+        /* تنسيق الهيدر (اللوجو على اليمين، التايمر على اليسار) */
         header {
             width: 100%;
-            max-width: 600px;
-            padding: 1rem 0;
+            max-width: 900px;
+            padding: 0.5rem 0;
             display: flex;
+            /* لضمان تباعد اللوجو والتايمر */
             justify-content: space-between;
             align-items: center;
             color: white;
             z-index: 10;
+            height: 90px; /* لتوفير مساحة للوجو الكبير */
         }
 
-        #game-title {
-            font-size: 2.5rem;
-            font-weight: 900;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-            margin: 0;
+        /* تنسيق اللوجو (أصبح على اليمين ومكبّر) */
+        #logo-container {
+            /* استخدم هذا كحامل للوجو ليتوافق مع تنسيق الهيدر */
+            display: flex;
+            align-items: center;
         }
 
+        #logo {
+            height: 80px; /* حجم اللوجو المكبر */
+            width: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease;
+        }
+
+            #logo:hover {
+                transform: scale(1.05);
+            }
+
+        /* تنسيق التايمر (أصبح أصغر) */
         #timer-display {
             display: flex;
             align-items: center;
             background: #1c274b;
-            padding: 0.5rem 1rem;
+            padding: 0.3rem 0.8rem; /* تصغير التايمر */
             border-radius: 999px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
             transition: all 0.5s ease;
+            /* للتأكد من المحاذاة على اليسار (نهاية الـ RTL) */
+            justify-content: flex-start;
         }
 
-        /* تنسيق التايمر */
         #timer {
-            font-size: 1.8rem;
+            font-size: 1.2rem; /* تصغير الخط */
             font-weight: 700;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
             -webkit-text-stroke: 1px #000;
             margin-left: 0.5rem;
             transition: color 0.3s;
@@ -92,25 +110,22 @@
         }
 
 
-        /* منطقة اللعب - تم إصلاح الترتيب باستخدام CSS Grid */
+        /* منطقة اللعب */
         #puzzle {
             background: #cbd5e1;
             border: 6px solid #1e3a8a;
             border-radius: 12px;
             position: relative;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
-            margin: 1.5rem 0;
-            /* تحديد حجم اللوحة ليكون مربعاً وسريع الاستجابة */
+            /* تقليل المسافة العلوية بعد إزالة اللوجو من المنتصف */
+            margin: 2rem 0 1.5rem 0;
             max-width: 90vmin;
             max-height: 90vmin;
             width: 90vmin;
             height: 90vmin;
-            /* **التعديل الهام:** استخدام CSS Grid لضمان المحاذاة المربعة */
             display: grid;
-            /* يتم تحديد عدد الأعمدة والصفوف بناءً على متغير CSS يتم تعيينه في JavaScript */
             grid-template-columns: repeat(var(--grid-size), 1fr);
             grid-template-rows: repeat(var(--grid-size), 1fr);
-            /* لإخفاء اللعبة قبل البدء */
             opacity: 0.5;
             pointer-events: none;
             transition: opacity 0.5s ease;
@@ -123,25 +138,21 @@
 
         .piece {
             border: 2px solid #ffffff;
-            box-sizing: border-box; /* للتأكد من أن الحدود لا تسبب انهيار التخطيط */
+            box-sizing: border-box;
             cursor: grab;
             user-select: none;
-            /* تحديد حجم القطعة لملء الخلية بالكامل */
             width: 100%;
             height: 100%;
-            /* حجم الخلفية يتم تحديده في JavaScript ليتطابق مع حجم اللوحة الكلي */
             background-size: var(--puzzle-size) var(--puzzle-size);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2), inset 0 0 5px rgba(255, 255, 255, 0.5);
             border-radius: 4px;
             transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
         }
 
-            /* تأثير الحركة عند النقر */
             .piece:active {
                 cursor: grabbing;
             }
 
-            /* تأثير السحب (Glow) */
             .piece.dragging {
                 opacity: 0.6;
                 transform: scale(1.05);
@@ -187,9 +198,8 @@
             }
 
         /* ------------------------------------------- */
-        /* تصميم البوب أب (Popups) - عام */
+        /* تصميم البوب أب (Popups) */
         /* ------------------------------------------- */
-
         .popup-overlay {
             position: fixed;
             top: 0;
@@ -239,7 +249,6 @@
             margin-bottom: 1.5rem;
         }
 
-        /* تنسيق الأزرار في البوب أب */
         .popup-button {
             padding: 12px 25px;
             border-radius: 8px;
@@ -281,7 +290,6 @@
                     background-color: #7f8c8d;
                 }
 
-
         /* Confetti Simulation */
         .confetti {
             position: absolute;
@@ -304,7 +312,6 @@
             }
         }
 
-        /* تصميم رسائل الفوز والخسارة المحددة */
         #win-popup .popup-title {
             color: #10b981;
         }
@@ -322,14 +329,22 @@
             text-align: center;
         }
 
-        /* Mobile Responsiveness - VMIN handles most responsiveness, but adjust font sizes */
+        /* Mobile Responsiveness */
         @media (max-width: 640px) {
-            #game-title {
-                font-size: 2rem;
+            #logo {
+                height: 60px; /* تصغير اللوجو على الموبايل */
             }
 
             #timer {
-                font-size: 1.5rem;
+                font-size: 1rem; /* تصغير التايمر على الموبايل */
+            }
+
+            #timer-display {
+                padding: 0.2rem 0.6rem;
+            }
+
+            #puzzle {
+                margin-top: 3rem; /* تعديل المسافة العلوية على الموبايل */
             }
 
             .popup-content {
@@ -347,10 +362,15 @@
     </style>
 </head>
 <body>
-    <!-- 1. الهيدر والتايمر -->
+    <!-- 1. الهيدر (تم إعادة ترتيبه) -->
     <header>
-        <div id="game-title">Puzzle Challenge</div>
-        <div id="timer-display">
+        <!-- اللوجو (على اليمين في وضع RTL) -->
+        <div id="logo-container" class="header-item">
+            <img id="logo" src="logo.png" alt="Game Logo - شعار اللعبة">
+        </div>
+
+        <!-- التايمر (على اليسار في وضع RTL) -->
+        <div id="timer-display" class="header-item">
             <!-- أيقونة الساعة -->
             <svg class="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -366,65 +386,44 @@
         </div>
     </main>
 
-    <!-- زر البدء الكبير (Play) -->
-    <button id="start-button" class="active" onclick="startRandomGame()">▶ Play</button>
+    <!-- زر البدء الكبير (Play) - يظهر في البداية ومع إعادة التشغيل -->
+    <button id="start-button" class="active" onclick="startRandomGame()">▶ ابدأ اللعب</button>
 
-    <!-- 3. الفوتر -->
-    <footer>
-        <p>Powered by Eng. Amany Elganzouri</p>
-        <div class="flex justify-center mt-1 space-x-3">
-            <a href="#" class="text-gray-400 hover:text-white transition duration-200">
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M7 10v4h3v7h4v-7h3l1-4h-4V8a1 1 0 011-1h3V3H10a5 5 0 00-5 5v2H2v4h3v7h4v-7H7z" /></svg>
-            </a>
-            <a href="#" class="text-gray-400 hover:text-white transition duration-200">
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M22 4.02a.987.987 0 01-.76 1.11L3.48 10.3c-.59.27-1.16-.14-1.16-.77V7.21c0-.44.47-.72.84-.57L21.2 5.09c.39-.17.81.16.81.6V18c0 .28-.22.5-.5.5h-.01c-.28 0-.5-.22-.5-.5v-4.88l-18 8.01c-.59.27-1.16-.14-1.16-.77v-2.31c0-.44.47-.72.84-.57L21.2 16.59c.39-.17.81.16.81.6V4.52a.5.5 0 00-.5-.5z" /></svg>
-            </a>
-        </div>
-    </footer>
-
-    <!-- 4. بوب أب الفوز -->
+    <!-- 3. بوب أب الفوز -->
     <div id="win-popup" class="popup-overlay">
         <div class="popup-content">
-            <!-- قصاصات الورق (Confetti) -->
             <div id="confetti-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; pointer-events: none;"></div>
-
             <h2 class="popup-title">🎉 مبروك! 🎉</h2>
             <p id="win-message" class="popup-text text-gray-700"></p>
             <div class="space-x-4 mt-4">
-                <button class="popup-button play-again" onclick="restartGame()">✅ Play Again</button>
-                <button class="popup-button gray" onclick="window.close()">❌ Exit</button>
+                <button class="popup-button play-again" onclick="restartGame()">✅ إلعب مرة أخرى</button>
+                <button class="popup-button gray" onclick="window.close()">❌ خروج</button>
             </div>
         </div>
     </div>
 
-    <!-- 5. بوب أب الخسارة -->
+    <!-- 4. بوب أب الخسارة -->
     <div id="lose-popup" class="popup-overlay">
         <div class="popup-content">
             <h2 class="popup-title">⏰ للأسف خلص الوقت! </h2>
             <p id="lose-message" class="popup-text text-red-600">لم تتمكن من حل البازل في الوقت المحدد. حاول تاني!</p>
             <div class="space-x-4 mt-4">
-                <button class="popup-button exit" onclick="restartGame()">Try Again</button>
-                <button class="popup-button gray" onclick="window.close()">❌ Exit</button>
+                <button class="popup-button exit" onclick="restartGame()">حاول مجدداً</button>
+                <button class="popup-button gray" onclick="window.close()">❌ خروج</button>
             </div>
         </div>
     </div>
 
     <script>
-        // --- مصفوفة روابط الصور ---
-        // سيتم اختيار صورة عشوائية من هذه المصفوفة في بداية كل لعبة
-        // ملاحظة: قمنا بإضافة امتداد .png افتراضياً. يرجى التأكد من أن صورك المرفوعة تحمل هذا الامتداد
-        // أو تعديل الامتداد إلى .jpg أو غيره إذا لزم الأمر.
+        // --- مصفوفة روابط الصور (تم تحديث أسماء الملفات) ---
         const PUZZLE_IMAGES = [
-            '1.png',
-            '5.png',
-            '3.png',
+            '1.jpg',
+            '5.png'
         ];
 
         let currentImageURL;
-
         let gridSize;
         let totalPieces;
-        // سيتم تحديد الحجم الفعلي ديناميكياً
         let currentPuzzleSize;
 
         // تعريف مستويات اللعب المحددة
@@ -443,9 +442,46 @@
         let currentLevelName = "";
 
         // --- دوال المؤثرات والأصوات (FX) ---
-        function playSound(type) {
-            console.log(`Playing sound: ${type}`);
+
+        // مُهيئ الصوت لـ Tone.js (يجب استدعاؤه عند تفاعل المستخدم الأول)
+        let isToneInitialized = false;
+        const synth = new Tone.PolySynth(Tone.Synth, {
+            oscillator: { type: "square" },
+            envelope: { attack: 0.005, decay: 0.1, sustain: 0.01, release: 0.05 }
+        }).toDestination();
+
+        function initializeTone() {
+            if (isToneInitialized) return;
+            // يجب استدعاء Tone.start() بعد تفاعل المستخدم
+            document.body.addEventListener('click', () => {
+                if (!isToneInitialized) {
+                    Tone.start();
+                    isToneInitialized = true;
+                    console.log("Tone.js Audio Context Initialized");
+                }
+            }, { once: true });
         }
+
+
+        function playSound(type) {
+            if (!isToneInitialized) return; // لا تشغل الصوت حتى يتم تهيئة Tone.js
+
+            switch (type) {
+                case 'move':
+                    // صوت خفيف وسريع عند الحركة
+                    synth.triggerAttackRelease("C5", "8n");
+                    break;
+                case 'win':
+                    // نغمة انتصار
+                    synth.triggerAttackRelease(["C5", "E5", "G5", "C6"], "4n");
+                    break;
+                case 'lose':
+                    // نغمة خسارة (هابطة)
+                    synth.triggerAttackRelease(["C3", "B2"], "4n");
+                    break;
+            }
+        }
+
 
         // إنشاء قصاصات الورق (Confetti)
         function createConfetti() {
@@ -484,10 +520,13 @@
 
             const ratio = timeRemaining / totalTimeSeconds;
 
-            if (timeRemaining <= 10) {
+            if (timeRemaining <= 10 && timeRemaining > 0) {
                 // آخر 10 ثواني: أحمر + وميض (Flashing)
                 timerElement.classList.add('timer-red');
                 timerDisplay.classList.add('timer-flashing');
+            } else if (timeRemaining <= 0) {
+                // الوقت انتهى
+                timerElement.classList.add('timer-red');
             } else if (ratio < 0.33) {
                 // الثلث الأخير: أحمر
                 timerElement.classList.add('timer-red');
@@ -522,20 +561,27 @@
             }, 1000);
         }
 
+        /**
+         * تتحقق مما إذا كان ترتيب قطع البازل في الـ DOM يطابق الترتيب الصحيح (حسب dataset.index).
+         * الترتيب الصحيح هو: العنصر الأول يكون dataset.index=1، والثاني=2، وهكذا.
+         */
         function checkWin() {
             const puzzle = document.getElementById("puzzle");
             if (puzzle.children.length === 0 || puzzle.children.length !== totalPieces) return false;
 
             for (let i = 0; i < totalPieces; i++) {
-                // الموقع الصحيح هو i + 1
+                // الموقع i يجب أن يحمل القطعة التي رقمها i + 1
                 const correctOrder = i + 1;
-                // القطعة الموجودة حالياً في هذا الموقع
-                const currentPieceIndex = parseInt(puzzle.children[i].dataset.index);
+                // القطعة الموجودة حالياً في هذا الموقع (i)
+                const currentPiece = puzzle.children[i];
+                const currentPieceIndex = parseInt(currentPiece.dataset.index);
 
+                // إذا كان أي عنصر في موقع خاطئ، فاللعبة لم تنته بعد
                 if (currentPieceIndex !== correctOrder) {
                     return false;
                 }
             }
+            // إذا كانت جميع القطع في ترتيبها الصحيح (1, 2, 3...)
             return true;
         }
 
@@ -555,6 +601,12 @@
                 // تعطيل لوحة اللعب
                 document.getElementById("puzzle").classList.remove('active');
 
+                // عرض القطع بشكل نهائي بدون حدود
+                Array.from(document.getElementById("puzzle").children).forEach(piece => {
+                    piece.style.border = 'none';
+                    piece.style.boxShadow = 'none';
+                });
+
                 createConfetti();
             }
         }
@@ -567,7 +619,9 @@
                 document.getElementById("lose-popup").classList.add('active');
 
                 // رسالة الخسارة الافتراضية
-                document.getElementById("lose-message").innerHTML = 'لم تتمكن من حل البازل في الوقت المحدد. حاول تاني!';
+                if (timeRemaining <= 0) {
+                    document.getElementById("lose-message").textContent = 'لم تتمكن من حل البازل في الوقت المحدد. حاول تاني!';
+                }
 
                 // تعطيل لوحة اللعب
                 document.getElementById("puzzle").classList.remove('active');
@@ -583,6 +637,9 @@
             // إخفاء جميع البوب أب وعرض زر البدء
             document.getElementById("win-popup").classList.remove('active');
             document.getElementById("lose-popup").classList.remove('active');
+
+            // تنظيف الكونفيتي
+            document.getElementById('confetti-container').innerHTML = '';
 
             // إعادة تعيين اللوحة والعداد وعرض زر البدء
             document.getElementById("puzzle").innerHTML = '';
@@ -626,8 +683,6 @@
                 const piece = document.createElement("div");
                 piece.classList.add("piece");
 
-                // **تم حذف تحديد الـ width/height هنا، الـ Grid يتولى ذلك الآن**
-
                 const pieceNumber = initialPieces[i];
 
                 const correctX = (pieceNumber - 1) % gridSize;
@@ -638,6 +693,8 @@
                 // تحديد موضع الخلفية (Background Position) بالبيكسل لتقطيع الصورة
                 piece.style.backgroundPosition = `-${correctX * pieceSize}px -${correctY * pieceSize}px`;
 
+                // **NOTE:** dataset.index يمثل رقم القطعة الصحيح (1, 2, 3...)
+                // هذا هو المفتاح الذي نستخدمه لتبديل المواضع داخل دالة checkWin
                 piece.dataset.index = pieceNumber;
                 piece.draggable = true;
 
@@ -668,7 +725,6 @@
             dragged = this;
             e.dataTransfer.setData("text/plain", dragged.dataset.index);
             setTimeout(() => { dragged.classList.add('dragging'); }, 0);
-            playSound('move');
         }
 
         function dragOver(e) {
@@ -676,89 +732,143 @@
         }
 
         function dragEnd(e) {
-            dragged.classList.remove('dragging');
+            // إزالة تأثير السحب بعد الإفلات
+            if (dragged) dragged.classList.remove('dragging');
         }
 
         function dropPiece(e) {
             e.preventDefault();
-            if (!isGameRunning) return;
+            if (!isGameRunning || !dragged) return;
 
             const target = this;
-            if (dragged && dragged !== target) {
-                swapPieces(dragged, target);
+            if (dragged !== target) {
+                // 1. تبديل العناصر الفعلية في الـ DOM (لتغيير الترتيب الفعلي)
+                swapElementsInDOM(dragged, target);
+
+                playSound('move'); // تشغيل صوت الحركة
+
+                // **2. التحقق من الفوز بعد تبديل الترتيب الفعلي**
                 if (checkWin()) {
                     handleWin();
                 }
+                dragged = null; // إعادة تعيين بعد التبديل
             }
         }
 
-        function swapPieces(piece1, piece2) {
-            // تبديل رقم القطعة (المفتاح السري)
-            const tempIndex = piece2.dataset.index;
-            piece2.dataset.index = piece1.dataset.index;
-            piece1.dataset.index = tempIndex;
+        /**
+         * دالة موثوقة لتبديل المواقع الفعلية لعنصرين داخل الـ DOM.
+         * هذا يغير الترتيب الذي تراه دالة checkWin().
+         */
+        function swapElementsInDOM(elem1, elem2) {
+            const parent = elem1.parentNode;
 
-            // تبديل موضع الخلفية (الصورة المرئية)
-            const tempBg = piece2.style.backgroundPosition;
-            piece2.style.backgroundPosition = piece1.style.backgroundPosition;
-            piece1.style.backgroundPosition = tempBg;
+            // العنصر الذي يلي elem1 (قد يكون elem2)
+            const nextSibling1 = elem1.nextSibling;
+
+            // في حالة كان elem2 هو العنصر التالي مباشرة لـ elem1
+            if (nextSibling1 === elem2) {
+                // انقل elem2 ليصبح قبل elem1
+                parent.insertBefore(elem2, elem1);
+            } else {
+                // الحالة العامة (غير متجاورين أو elem1 يتبع elem2)
+                const nextSibling2 = elem2.nextSibling;
+
+                // نقل elem1 إلى موضع elem2 (قبل العنصر الذي يلي elem2)
+                parent.insertBefore(elem1, nextSibling2);
+
+                // نقل elem2 إلى موضع elem1 الأصلي (قبل العنصر الذي كان يلي elem1)
+                parent.insertBefore(elem2, nextSibling1);
+            }
         }
+
 
         // --- دوال اللمس (Touch Events) ---
         let touchDragged;
         let touchTarget;
 
         function touchStart(e) {
-            if (!isGameRunning) {
+            if (!isGameRunning || e.touches.length !== 1) {
                 e.preventDefault();
                 return;
             }
             touchDragged = this;
             touchDragged.classList.add('dragging');
             e.preventDefault();
+
+            // إزالة أي ظل من الهدف السابق
+            if (touchTarget) {
+                touchTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.2), inset 0 0 5px rgba(255, 255, 255, 0.5)';
+            }
+            touchTarget = null;
         }
 
         function touchMove(e) {
             e.preventDefault();
+            if (!touchDragged) return;
+
             const touch = e.touches[0];
+            // استخدام elementFromPoint لإيجاد العنصر تحت إصبع المستخدم
             const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
 
+            // التحقق من أن العنصر هو قطعة بازل مختلفة عن القطعة المسحوبة
             if (targetElement && targetElement.classList.contains('piece') && targetElement !== touchDragged) {
-                if (touchTarget) touchTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.2), inset 0 0 5px rgba(255, 255, 255, 0.5)';
+                // إزالة التظليل من الهدف القديم إذا كان موجوداً
+                if (touchTarget && touchTarget !== targetElement) {
+                    touchTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.2), inset 0 0 5px rgba(255, 255, 255, 0.5)';
+                }
                 touchTarget = targetElement;
+                // إضافة تظليل للهدف الجديد
                 touchTarget.style.boxShadow = '0 0 10px 5px rgba(255, 255, 0, 0.7)';
             } else {
-                if (touchTarget) touchTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.2), inset 0 0 5px rgba(255, 255, 255, 0.5)';
+                // إذا ابتعدنا عن الهدف، نزيل التظليل
+                if (touchTarget) {
+                    touchTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.2), inset 0 0 5px rgba(255, 255, 255, 0.5)';
+                }
                 touchTarget = null;
             }
         }
 
         function touchEnd(e) {
+            if (!touchDragged) return;
+
             touchDragged.classList.remove('dragging');
 
             if (touchTarget && touchDragged !== touchTarget) {
-                swapPieces(touchDragged, touchTarget);
+                // 1. تبديل العناصر الفعلية في الـ DOM (لتغيير الترتيب الفعلي)
+                swapElementsInDOM(touchDragged, touchTarget);
 
+                playSound('move'); // تشغيل صوت الحركة
+
+                // إزالة تظليل الهدف بعد التبديل
                 touchTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.2), inset 0 0 5px rgba(255, 255, 255, 0.5)';
-                touchTarget = null;
 
+                // **2. التحقق من الفوز بعد تبديل الترتيب الفعلي**
                 if (checkWin()) {
                     handleWin();
                 }
+            } else if (touchTarget) {
+                // إزالة تظليل الهدف في حالة لم يحدث تبديل
+                touchTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.2), inset 0 0 5px rgba(255, 255, 255, 0.5)';
             }
+            // إعادة تعيين المتغيرات
             touchDragged = null;
+            touchTarget = null;
         }
 
         // إعادة تحميل البازل عند تغيير حجم الشاشة (لضمان إعادة حساب موضع الخلفية)
         window.addEventListener('resize', () => {
             if (isGameRunning) {
-                loadAndSetupPuzzle();
+                // تأخير بسيط لضمان اكتمال تغيير الحجم
+                setTimeout(loadAndSetupPuzzle, 100);
             }
         });
 
 
         // --- دالة بدء اللعبة عشوائياً ---
         function startRandomGame() {
+            // تهيئة الصوت عند أول تفاعل
+            initializeTone();
+
             // 1. اختيار صورة عشوائية
             const imageIndex = Math.floor(Math.random() * PUZZLE_IMAGES.length);
             currentImageURL = PUZZLE_IMAGES[imageIndex];
@@ -785,11 +895,12 @@
             img.onerror = () => {
                 // في حالة فشل تحميل الصورة
                 document.getElementById("lose-popup").querySelector('.popup-title').textContent = '⚠️ خطأ في تحميل الصورة';
-                document.getElementById("lose-message").textContent = `تعذر تحميل صورة البازل من الرابط: ${currentImageURL}. يرجى التأكد من اسم الملف والامتداد.`;
+                document.getElementById("lose-message").textContent = `تعذر تحميل صورة البازل. يرجى التأكد من الرابط.`;
                 handleLose();
                 showStartButton();
             };
 
+            // استخدام اسم الملف أو معرّف المحتوى هنا
             img.src = currentImageURL;
         }
 
@@ -798,8 +909,8 @@
             totalTimeSeconds = LEVELS[0].time;
             resetTimer();
             showStartButton();
+            initializeTone(); // محاولة التهيئة المبكرة مع تفاعل المستخدم
         });
     </script>
 </body>
 </html>
-
