@@ -3,13 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Event Game - تحدي الصور</title>
+    <title>لعبة البازل النهائية | تحدي الصور</title>
+    <!-- استخدام Tailwind CSS للتصميم الحديث والسريع -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- تحميل مكتبة Tone.js للمؤثرات الصوتية -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <style>
         /* إعداد الخطوط والخلفية الشاملة */
         @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700;900&display=swap');
+
+        :root {
+            /* درجات الأخضر الهادئ */
+            --primary-green: #047857; /* Emerald-600 */
+            --soft-bg: #d1fae5; /* Emerald-100 */
+        }
 
         body {
             font-family: 'Vazirmatn', sans-serif;
@@ -17,899 +22,557 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            /* خلفية Gradient شيك */
-            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            /* خلفية هادئة متناسقة */
+            background: linear-gradient(135deg, #10b981 0%, #064e3b 100%); /* Teal/Emerald gradient */
             min-height: 100vh;
+            height: 100dvh;
             padding: 1rem;
             position: relative;
+            overflow: hidden; /* لمنع السكرول غير الضروري */
         }
 
         /* تنسيق الهيدر (اللوجو على اليمين، التايمر على اليسار) */
         header {
             width: 100%;
             max-width: 900px;
-            padding: 0.5rem 0;
+            padding: 0.75rem 1.5rem;
             display: flex;
-            /* لضمان تباعد اللوجو والتايمر */
             justify-content: space-between;
             align-items: center;
-            color: white;
-            z-index: 10;
-            height: 90px; /* لتوفير مساحة للوجو الكبير */
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(5px);
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
         }
 
-        /* تنسيق اللوجو (أصبح على اليمين ومكبّر) */
-        #logo-container {
-            /* استخدم هذا كحامل للوجو ليتوافق مع تنسيق الهيدر */
+        .timer {
             display: flex;
             align-items: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            background: rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
         }
 
-        #logo {
-            height: 80px; /* حجم اللوجو المكبر */
-            width: auto;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-            transition: transform 0.3s ease;
-        }
-
-            #logo:hover {
-                transform: scale(1.05);
+            .timer.warning {
+                background: #ef4444; /* Red-500 */
+                animation: pulse 1s infinite alternate;
             }
 
-        /* تنسيق التايمر (أصبح أصغر) */
-        #timer-display {
-            display: flex;
-            align-items: center;
-            background: #1c274b;
-            padding: 0.3rem 0.8rem; /* تصغير التايمر */
-            border-radius: 999px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            transition: all 0.5s ease;
-            /* للتأكد من المحاذاة على اليسار (نهاية الـ RTL) */
-            justify-content: flex-start;
-        }
-
-        #timer {
-            font-size: 1.2rem; /* تصغير الخط */
-            font-weight: 700;
-            letter-spacing: 1px;
-            -webkit-text-stroke: 1px #000;
-            margin-left: 0.5rem;
-            transition: color 0.3s;
-        }
-
-        /* حالات ألوان التايمر */
-        .timer-green {
-            color: #10b981;
-        }
-
-        .timer-yellow {
-            color: #facc15;
-        }
-
-        .timer-red {
-            color: #ef4444;
-        }
-
-        .timer-flashing {
-            animation: flash 0.5s infinite alternate;
-            border: 2px solid #ef4444;
-        }
-
-        @keyframes flash {
+        @keyframes pulse {
             from {
-                opacity: 1;
                 transform: scale(1);
             }
 
             to {
-                opacity: 0.7;
                 transform: scale(1.05);
             }
         }
 
-
-        /* منطقة اللعب */
-        #puzzle {
-            background: #cbd5e1;
-            border: 6px solid #1e3a8a;
-            border-radius: 12px;
-            position: relative;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
-            /* تقليل المسافة العلوية بعد إزالة اللوجو من المنتصف */
-            margin: 2rem 0 1.5rem 0;
-            max-width: 90vmin;
-            max-height: 90vmin;
-            width: 90vmin;
-            height: 90vmin;
-            display: grid;
-            grid-template-columns: repeat(var(--grid-size), 1fr);
-            grid-template-rows: repeat(var(--grid-size), 1fr);
-            opacity: 0.5;
-            pointer-events: none;
-            transition: opacity 0.5s ease;
+        /* منطقة اللعب الرئيسية */
+        .game-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1;
+            width: 100%;
+            max-width: 900px;
+            padding-bottom: 1rem;
         }
 
-            #puzzle.active {
-                opacity: 1;
-                pointer-events: auto;
+        #puzzle {
+            width: 100%;
+            max-width: min(90vh, 90vw, 600px); /* حجم مربع ومتجاوب */
+            aspect-ratio: 1/1;
+            gap: 2px;
+            background: #fff;
+            border: 6px solid #fff;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            touch-action: none;
+            display: grid;
+        }
+
+            /* تنسيق الـ Grid ديناميكياً باستخدام خصائص CSS */
+            #puzzle[data-size="3"] {
+                grid-template-columns: repeat(3, 1fr);
+                grid-template-rows: repeat(3, 1fr);
             }
+
+            #puzzle[data-size="4"] {
+                grid-template-columns: repeat(4, 1fr);
+                grid-template-rows: repeat(4, 1fr);
+            }
+
+            #puzzle[data-size="5"] {
+                grid-template-columns: repeat(5, 1fr);
+                grid-template-rows: repeat(5, 1fr);
+            }
+
 
         .piece {
-            border: 2px solid #ffffff;
-            box-sizing: border-box;
-            cursor: grab;
-            user-select: none;
             width: 100%;
             height: 100%;
-            background-size: var(--puzzle-size) var(--puzzle-size);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2), inset 0 0 5px rgba(255, 255, 255, 0.5);
-            border-radius: 4px;
-            transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
+            background-size: 300% 300%; /* Default for 3x3, will be updated by JS */
+            cursor: grab;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            position: relative;
         }
 
-            .piece:active {
+            .piece:active, .piece.dragging {
                 cursor: grabbing;
+                transform: scale(1.05) translateZ(0); /* تأثير الرفع (Lift effect) */
+                z-index: 1000;
+                opacity: 0.9;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
             }
 
-            .piece.dragging {
-                opacity: 0.6;
-                transform: scale(1.05);
-                box-shadow: 0 0 20px #facc15, 0 8px 15px rgba(0, 0, 0, 0.5);
-                z-index: 10;
+            .piece.drag-over {
+                box-shadow: inset 0 0 10px 5px #059669; /* ظل داخلي على المنطقة المستهدفة */
+                border: 3px solid #059669;
             }
 
-        /* ------------------------------------------- */
-        /* تصميم زر البدء الكبير (Start Button) */
-        /* ------------------------------------------- */
-
-        #start-button {
+        /* تنسيق الـ Popups (Start, Win, Lose) */
+        .modal-overlay {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            padding: 20px 40px;
-            font-size: 2rem;
-            font-weight: 900;
-            background: linear-gradient(45deg, #2ecc71, #27ae60);
-            color: white;
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 8px #1e8449;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: none;
-            z-index: 50;
-        }
-
-            #start-button.active {
-                display: block;
-            }
-
-            #start-button:hover {
-                transform: translate(-50%, -50%) scale(1.05);
-                box-shadow: 0 10px #1e8449;
-            }
-
-            #start-button:active {
-                transform: translate(-50%, -50%) translateY(4px);
-                box-shadow: 0 4px #1e8449;
-            }
-
-        /* ------------------------------------------- */
-        /* تصميم البوب أب (Popups) */
-        /* ------------------------------------------- */
-        .popup-overlay {
-            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            display: flex;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
             justify-content: center;
             align-items: center;
             z-index: 2000;
-            backdrop-filter: blur(5px);
             opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
+            transition: opacity 0.5s ease;
         }
 
-            .popup-overlay.active {
+            .modal-overlay.show {
+                display: flex;
                 opacity: 1;
-                pointer-events: auto;
             }
 
-        .popup-content {
-            background: linear-gradient(180deg, #ffffff 0%, #f3f4f6 100%);
+        .modal-content {
+            background: var(--soft-bg); /* الخلفية الخضراء الهادئة للـ Popup */
             padding: 2.5rem;
-            border-radius: 15px;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+            border-radius: 20px;
             text-align: center;
-            transform: scale(0.8);
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative;
+            max-width: 90%;
+            width: 400px;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .popup-overlay.active .popup-content {
+        .modal-overlay.show .modal-content {
             transform: scale(1);
         }
 
-        .popup-title {
-            font-size: 2.5rem;
-            font-weight: 900;
-            margin-bottom: 1rem;
-        }
-
-        .popup-text {
-            font-size: 1.2rem;
-            color: #374151;
-            margin-bottom: 1.5rem;
-        }
-
-        .popup-button {
-            padding: 12px 25px;
-            border-radius: 8px;
+        .modal-button {
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
             font-size: 1.1rem;
             font-weight: 700;
-            margin: 0 10px;
-            transition: background-color 0.3s, transform 0.3s;
-            border: none;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s, box-shadow 0.3s;
         }
 
-            .popup-button:hover {
+            .modal-button:hover {
+                background: #059669; /* Emerald-700 */
                 transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(4, 120, 87, 0.4);
             }
 
-            .popup-button.play-again {
-                background-color: #2ecc71;
-                color: white;
+            .modal-button.secondary {
+                background: #f59e0b; /* Amber-500 */
             }
 
-                .popup-button.play-again:hover {
-                    background-color: #27ae60;
+                .modal-button.secondary:hover {
+                    background: #d97706; /* Amber-700 */
                 }
-
-            .popup-button.exit {
-                background-color: #e74c3c;
-                color: white;
-            }
-
-                .popup-button.exit:hover {
-                    background-color: #c0392b;
-                }
-
-            .popup-button.gray {
-                background-color: #95a5a6;
-                color: white;
-            }
-
-                .popup-button.gray:hover {
-                    background-color: #7f8c8d;
-                }
-
-        /* Confetti Simulation */
-        .confetti {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            opacity: 0;
-            border-radius: 50%;
-            animation: confetti-fall 4s ease-in-out infinite;
-        }
-
-        @keyframes confetti-fall {
-            0% {
-                transform: translate(0, 0) rotate(0deg);
-                opacity: 1;
-            }
-
-            100% {
-                transform: translate(var(--x), var(--y)) rotate(720deg);
-                opacity: 0;
-            }
-        }
-
-        #win-popup .popup-title {
-            color: #10b981;
-        }
-
-        #lose-popup .popup-title {
-            color: #ef4444;
-        }
-
-        /* تنسيق الفوتر */
-        footer {
-            margin-top: auto;
-            padding: 1rem 0;
-            color: #d1d5db;
-            font-size: 0.85rem;
-            text-align: center;
-        }
-
-        /* Mobile Responsiveness */
-        @media (max-width: 640px) {
-            #logo {
-                height: 60px; /* تصغير اللوجو على الموبايل */
-            }
-
-            #timer {
-                font-size: 1rem; /* تصغير التايمر على الموبايل */
-            }
-
-            #timer-display {
-                padding: 0.2rem 0.6rem;
-            }
-
-            #puzzle {
-                margin-top: 3rem; /* تعديل المسافة العلوية على الموبايل */
-            }
-
-            .popup-content {
-                padding: 1.5rem;
-            }
-
-            .popup-title {
-                font-size: 2rem;
-            }
-
-            .popup-text {
-                font-size: 1rem;
-            }
-        }
     </style>
 </head>
-<body>
-    <!-- 1. الهيدر (تم إعادة ترتيبه) -->
+<body class="bg-teal-700">
     <header>
-        <!-- اللوجو (على اليمين في وضع RTL) -->
-        <div id="logo-container" class="header-item">
-            <img id="logo" src="logo.png" alt="Game Logo - شعار اللعبة">
+        <div class="flex items-center space-x-2 space-x-reverse">
+            <h1 class="text-white text-2xl font-black">لعبة البازل</h1>
         </div>
 
-        <!-- التايمر (على اليسار في وضع RTL) -->
-        <div id="timer-display" class="header-item">
-            <!-- أيقونة الساعة -->
-            <svg class="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            <span id="timer" class="timer-green">00:00</span>
+        <!-- المؤقت -->
+        <div class="timer" id="timer">
+            ⏱️ <span id="time">00:00</span>
         </div>
     </header>
 
-    <!-- 2. منطقة اللعب -->
-    <main class="flex-grow flex justify-center items-center w-full">
-        <div id="puzzle">
-            <!-- سيتم إنشاء قطع البازل هنا بواسطة JavaScript -->
+    <div class="game-container">
+        <div id="puzzle" data-size="3"></div>
+    </div>
+
+    <!-- 1. Popup البداية (Start Modal) - أخضر هادئ -->
+    <div class="modal-overlay show" id="startModal">
+        <div class="modal-content">
+            <h2 class="text-3xl font-black text-emerald-700 mb-4">أهلاً بك في تحدي البازل</h2>
+            <p class="text-gray-600 mb-6">هل أنت مستعد لبدء اللعبة؟ سيتم اختيار مستوى التحدي عشوائياً.</p>
+            <button class="modal-button" onclick="startGame()">▶️ ابدأ اللعبة</button>
         </div>
-    </main>
+    </div>
 
-    <!-- زر البدء الكبير (Play) - يظهر في البداية ومع إعادة التشغيل -->
-    <button id="start-button" class="active" onclick="startRandomGame()">▶ ابدأ اللعب</button>
-
-    <!-- 3. بوب أب الفوز -->
-    <div id="win-popup" class="popup-overlay">
-        <div class="popup-content">
-            <div id="confetti-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; pointer-events: none;"></div>
-            <h2 class="popup-title">🎉 مبروك! 🎉</h2>
-            <p id="win-message" class="popup-text text-gray-700"></p>
-            <div class="space-x-4 mt-4">
-                <button class="popup-button play-again" onclick="restartGame()">✅ إلعب مرة أخرى</button>
-                <button class="popup-button gray" onclick="window.close()">❌ خروج</button>
+    <!-- 2. Popup النجاح (Win Modal) -->
+    <div class="modal-overlay" id="winModal">
+        <div class="modal-content">
+            <h2 class="text-3xl font-black text-green-700 mb-4">🎉 أحسنت! فزت بالتحدي!</h2>
+            <p class="text-gray-600 mb-6">أنهيت اللغز في <span id="completionTime" class="font-bold text-lg text-emerald-600"></span></p>
+            <div class="flex flex-col space-y-3">
+                <button class="modal-button" onclick="startGame()">🔄 تحدٍ جديد (مستوى عشوائي)</button>
+                <button class="modal-button secondary" onclick="goHome()">🏠 العودة</button>
             </div>
         </div>
     </div>
 
-    <!-- 4. بوب أب الخسارة -->
-    <div id="lose-popup" class="popup-overlay">
-        <div class="popup-content">
-            <h2 class="popup-title">⏰ للأسف خلص الوقت! </h2>
-            <p id="lose-message" class="popup-text text-red-600">لم تتمكن من حل البازل في الوقت المحدد. حاول تاني!</p>
-            <div class="space-x-4 mt-4">
-                <button class="popup-button exit" onclick="restartGame()">حاول مجدداً</button>
-                <button class="popup-button gray" onclick="window.close()">❌ خروج</button>
-            </div>
+    <!-- 3. Popup الخسارة (Lose Modal) - تم تعديله ليحتوي على زر واحد فقط -->
+    <div class="modal-overlay" id="loseModal">
+        <div class="modal-content">
+            <h2 class="text-3xl font-black text-red-600 mb-4">⏰ انتهى الوقت!</h2>
+            <p class="text-gray-600 mb-6">لقد نفد الوقت المتاح. لا تستسلم، حاول مرة أخرى!</p>
+            <!-- زر واحد فقط "حاول مرة أخرى" -->
+            <button class="modal-button secondary" onclick="startGame()">🔄 حاول مرة أخرى</button>
         </div>
     </div>
 
     <script>
-        // --- مصفوفة روابط الصور (تم تحديث أسماء الملفات) ---
+        const puzzle = document.getElementById("puzzle");
+        const timerDisplay = document.getElementById("time");
+        const startModal = document.getElementById("startModal");
+        const winModal = document.getElementById("winModal");
+        const loseModal = document.getElementById("loseModal");
+        const completionTimeSpan = document.getElementById("completionTime");
+        const timerElement = document.getElementById("timer");
+
+        let dragged;
+        let timerInterval;
+        let gameStartTime;
+        let gameCompleted = false;
+
+        // --- ثابتات ومستويات اللعبة ---
+        const LEVELS = [
+            { size: 3, time: 60 },  // 3x3, 60 ثانية
+            { size: 4, time: 90 },  // 4x4, 90 ثانية
+            { size: 5, time: 120 } // 5x5, 120 ثانية
+        ];
+
+        // ** قائمة الصور - تم إضافة اسم الملف الذي قمت بتحميله مؤخراً**
         const PUZZLE_IMAGES = [
             '1.jpg',
             '5.png'
         ];
 
-        let currentImageURL;
-        let gridSize;
-        let totalPieces;
-        let currentPuzzleSize;
+        let gridSize = 3;
+        let totalTimeSeconds = 60;
+        let currentImageSrc = '';
+        let timeLeft = 60;
 
-        // تعريف مستويات اللعب المحددة
-        const LEVELS = [
-            // Easy (3x3) - 90 seconds
-            { name: 'Easy', size: 3, time: 90 },
-            // Medium (4x4) - 120 seconds
-            { name: 'Medium', size: 4, time: 120 }
-        ];
+        // --- دالة اختيار صورة عشوائية ---
+        function selectRandomImage() {
+            const randomIndex = Math.floor(Math.random() * PUZZLE_IMAGES.length);
+            currentImageSrc = PUZZLE_IMAGES[randomIndex];
+            //console.log(`Selected puzzle image: ${currentImageSrc}`);
+        }
 
-        // --- إعدادات العداد والمستوى ---
-        let timerInterval;
-        let totalTimeSeconds = 0;
-        let timeRemaining = 0;
-        let isGameRunning = false;
-        let currentLevelName = "";
+        // --- دالة اختيار مستوى عشوائي ---
+        function selectRandomLevel() {
+            const levelIndex = Math.floor(Math.random() * LEVELS.length);
+            const selectedLevel = LEVELS[levelIndex];
+            gridSize = selectedLevel.size;
+            totalTimeSeconds = selectedLevel.time;
+            timeLeft = totalTimeSeconds;
+            //console.log(`Selected level: ${gridSize}x${gridSize} with ${totalTimeSeconds} seconds.`);
+        }
 
-        // --- دوال المؤثرات والأصوات (FX) ---
+        // --- دالة تبديل المواضع في DOM (تم تحسينها) ---
+        function swapElements(elem1, elem2) {
+            // للتأكد من أننا نبدل في نفس الوالد
+            if (elem1.parentNode !== elem2.parentNode) return;
 
-        // مُهيئ الصوت لـ Tone.js (يجب استدعاؤه عند تفاعل المستخدم الأول)
-        let isToneInitialized = false;
-        const synth = new Tone.PolySynth(Tone.Synth, {
-            oscillator: { type: "square" },
-            envelope: { attack: 0.005, decay: 0.1, sustain: 0.01, release: 0.05 }
-        }).toDestination();
+            // **منطق التبديل الأكثر موثوقية:**
+            // 1. إنشاء حاوية مؤقتة (placeholder) للموقع الأول
+            const temp = document.createElement('div');
+            // 2. استبدال العنصر الأول بالحاوية المؤقتة
+            elem1.parentNode.replaceChild(temp, elem1);
+            // 3. إدخال العنصر الأول (elem1) قبل العنصر الثاني (elem2)
+            elem2.parentNode.insertBefore(elem1, elem2);
+            // 4. استبدال الحاوية المؤقتة (حيث كان elem1) بالعنصر الثاني (elem2)
+            temp.parentNode.replaceChild(elem2, temp);
 
-        function initializeTone() {
-            if (isToneInitialized) return;
-            // يجب استدعاء Tone.start() بعد تفاعل المستخدم
-            document.body.addEventListener('click', () => {
-                if (!isToneInitialized) {
-                    Tone.start();
-                    isToneInitialized = true;
-                    console.log("Tone.js Audio Context Initialized");
+            // console.log(`Swap successful: ${elem1.dataset.correct} swapped with ${elem2.dataset.correct}`);
+        }
+
+        // --- دالة بدء اللعبة (تتضمن اختيار المستوى والصورة) ---
+        function startGame() {
+            // 1. إخفاء الـ Popups
+            startModal.classList.remove('show');
+            winModal.classList.remove('show');
+            loseModal.classList.remove('show');
+
+            // 2. اختيار المستوى والصورة
+            selectRandomLevel();
+            selectRandomImage();
+
+            // 3. تهيئة وتكوين البازل
+            initPuzzle();
+        }
+
+        // --- تهيئة وتكوين البازل ---
+        function initPuzzle() {
+            puzzle.innerHTML = '';
+            gameCompleted = false;
+            timerElement.classList.remove('warning');
+
+            // ضبط خصائص الـ Grid ديناميكياً
+            puzzle.setAttribute('data-size', gridSize);
+            const backgroundSizePercent = gridSize * 100;
+
+            let pieces = [];
+            for (let row = 0; row < gridSize; row++) {
+                for (let col = 0; col < gridSize; col++) {
+                    const piece = document.createElement("div");
+                    piece.classList.add("piece");
+
+                    // استخدام مصدر الصورة العشوائي
+                    piece.style.backgroundImage = `url("${currentImageSrc}")`;
+
+                    // حساب موضع الخلفية (Background Position)
+                    const bgPosX = (col / (gridSize - 1)) * 100;
+                    const bgPosY = (row / (gridSize - 1)) * 100;
+
+                    piece.style.backgroundPosition = `${bgPosX}% ${bgPosY}%`;
+                    piece.style.backgroundSize = `${backgroundSizePercent}% ${backgroundSizePercent}%`;
+
+                    // data-correct يمثل الموقع الصحيح (0, 1, 2, ..., N*N-1)
+                    piece.dataset.correct = row * gridSize + col;
+                    piece.draggable = true;
+                    pieces.push(piece);
                 }
-            }, { once: true });
-        }
-
-
-        function playSound(type) {
-            if (!isToneInitialized) return; // لا تشغل الصوت حتى يتم تهيئة Tone.js
-
-            switch (type) {
-                case 'move':
-                    // صوت خفيف وسريع عند الحركة
-                    synth.triggerAttackRelease("C5", "8n");
-                    break;
-                case 'win':
-                    // نغمة انتصار
-                    synth.triggerAttackRelease(["C5", "E5", "G5", "C6"], "4n");
-                    break;
-                case 'lose':
-                    // نغمة خسارة (هابطة)
-                    synth.triggerAttackRelease(["C3", "B2"], "4n");
-                    break;
             }
+
+            // خلط القطع عشوائياً
+            pieces.sort(() => Math.random() - 0.5);
+            pieces.forEach(p => puzzle.appendChild(p));
+
+            // بدء المؤقت
+            startTimer();
+            gameStartTime = Date.now();
+            console.log("Puzzle initialized. Game ready.");
         }
 
-
-        // إنشاء قصاصات الورق (Confetti)
-        function createConfetti() {
-            const container = document.getElementById('confetti-container');
-            container.innerHTML = '';
-            for (let i = 0; i < 50; i++) {
-                const confetti = document.createElement('div');
-                confetti.classList.add('confetti');
-                const x = Math.random() * 500 - 250;
-                const y = Math.random() * 500;
-                const delay = Math.random() * 0.5;
-
-                confetti.style.setProperty('--x', `${x}px`);
-                confetti.style.setProperty('--y', `${y}px`);
-                confetti.style.animationDelay = `${delay}s`;
-                confetti.style.backgroundColor = ['#facc15', '#ef4444', '#3b82f6', '#10b981'][Math.floor(Math.random() * 4)];
-
-                container.appendChild(confetti);
-            }
-        }
-
-        // --- دوال العداد والفوز/الخسارة ---
-        function formatTime(sec) {
-            let m = Math.floor(sec / 60).toString().padStart(2, '0');
-            let s = (sec % 60).toString().padStart(2, '0');
-            return `${m}:${s}`;
-        }
-
-        function updateTimerDisplay() {
-            const timerDisplay = document.getElementById("timer-display");
-            const timerElement = document.getElementById("timer");
-
-            // تنظيف الحالات السابقة
-            timerElement.classList.remove('timer-green', 'timer-yellow', 'timer-red');
-            timerDisplay.classList.remove('timer-flashing');
-
-            const ratio = timeRemaining / totalTimeSeconds;
-
-            if (timeRemaining <= 10 && timeRemaining > 0) {
-                // آخر 10 ثواني: أحمر + وميض (Flashing)
-                timerElement.classList.add('timer-red');
-                timerDisplay.classList.add('timer-flashing');
-            } else if (timeRemaining <= 0) {
-                // الوقت انتهى
-                timerElement.classList.add('timer-red');
-            } else if (ratio < 0.33) {
-                // الثلث الأخير: أحمر
-                timerElement.classList.add('timer-red');
-            } else if (ratio < 0.66) {
-                // الثلث الأوسط: أصفر
-                timerElement.classList.add('timer-yellow');
-            } else {
-                // الثلث الأول: أخضر
-                timerElement.classList.add('timer-green');
-            }
-            timerElement.textContent = formatTime(timeRemaining);
-
-        }
-
-        function resetTimer() {
+        // --- دالة المؤقت ---
+        function startTimer() {
             clearInterval(timerInterval);
-            timeRemaining = totalTimeSeconds;
-            updateTimerDisplay();
-        }
+            timeLeft = totalTimeSeconds; // إعادة تعيين الوقت للمستوى الجديد
 
-        function startCountdown() {
-            resetTimer();
-            isGameRunning = true;
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
 
             timerInterval = setInterval(() => {
-                timeRemaining--;
-                updateTimerDisplay();
+                if (gameCompleted) {
+                    clearInterval(timerInterval);
+                    return;
+                }
 
-                if (timeRemaining <= 0) {
-                    handleLose();
+                timeLeft--;
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+                // تنبيه اقتراب الوقت (آخر 10 ثواني)
+                if (timeLeft <= 10) {
+                    timerElement.classList.add('warning');
+                } else {
+                    timerElement.classList.remove('warning');
+                }
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    if (!gameCompleted) {
+                        gameCompleted = true;
+                        setTimeout(() => {
+                            loseModal.classList.add('show'); // عرض مودال الخسارة
+                        }, 300);
+                    }
                 }
             }, 1000);
         }
 
-        /**
-         * تتحقق مما إذا كان ترتيب قطع البازل في الـ DOM يطابق الترتيب الصحيح (حسب dataset.index).
-         * الترتيب الصحيح هو: العنصر الأول يكون dataset.index=1، والثاني=2، وهكذا.
-         */
+        // --- التحقق من شرط الفوز (مع تسجيل الأخطاء في Console) ---
         function checkWin() {
-            const puzzle = document.getElementById("puzzle");
-            if (puzzle.children.length === 0 || puzzle.children.length !== totalPieces) return false;
+            const pieces = [...puzzle.children];
+            let allCorrect = true;
 
-            for (let i = 0; i < totalPieces; i++) {
-                // الموقع i يجب أن يحمل القطعة التي رقمها i + 1
-                const correctOrder = i + 1;
-                // القطعة الموجودة حالياً في هذا الموقع (i)
-                const currentPiece = puzzle.children[i];
-                const currentPieceIndex = parseInt(currentPiece.dataset.index);
+            for (let i = 0; i < pieces.length; i++) {
+                const p = pieces[i];
+                const correctPositionForThisPiece = parseInt(p.dataset.correct);
 
-                // إذا كان أي عنصر في موقع خاطئ، فاللعبة لم تنته بعد
-                if (currentPieceIndex !== correctOrder) {
-                    return false;
+                if (correctPositionForThisPiece !== i) {
+                    allCorrect = false;
+                    // رسالة الخطأ المفصلة التي طلبناها
+                    console.log(`Piece at visual index ${i} is incorrect. It has data-correct="${correctPositionForThisPiece}", but a piece with data-correct="${i}" should be here.`);
+                    break;
                 }
             }
-            // إذا كانت جميع القطع في ترتيبها الصحيح (1, 2, 3...)
-            return true;
-        }
 
-        function handleWin() {
-            if (isGameRunning) {
-                clearInterval(timerInterval);
-                isGameRunning = false;
-                playSound('win');
+            if (allCorrect) {
+                console.log("Puzzle Solved! Sequence is correct.");
+                if (!gameCompleted) {
+                    gameCompleted = true;
+                    clearInterval(timerInterval);
 
-                const timeSpent = totalTimeSeconds - timeRemaining;
-                const finalTimeFormat = formatTime(timeSpent);
+                    // حساب الوقت المنقضي
+                    const elapsedTime = Math.floor((Date.now() - gameStartTime) / 1000);
+                    const elapsedMinutes = Math.floor(elapsedTime / 60);
+                    const elapsedSeconds = elapsedTime % 60;
 
-                // رسالة الفوز
-                document.getElementById("win-message").innerHTML = `حلّيت البازل في **${finalTimeFormat}**!<br>المستوى كان: **${currentLevelName} (${gridSize}x${gridSize})** 🎯`;
-                document.getElementById("win-popup").classList.add('active');
+                    completionTimeSpan.textContent = `${elapsedMinutes}:${elapsedSeconds.toString().padStart(2, '0')}`;
 
-                // تعطيل لوحة اللعب
-                document.getElementById("puzzle").classList.remove('active');
-
-                // عرض القطع بشكل نهائي بدون حدود
-                Array.from(document.getElementById("puzzle").children).forEach(piece => {
-                    piece.style.border = 'none';
-                    piece.style.boxShadow = 'none';
-                });
-
-                createConfetti();
-            }
-        }
-
-        function handleLose() {
-            if (isGameRunning) {
-                clearInterval(timerInterval);
-                isGameRunning = false;
-                playSound('lose');
-                document.getElementById("lose-popup").classList.add('active');
-
-                // رسالة الخسارة الافتراضية
-                if (timeRemaining <= 0) {
-                    document.getElementById("lose-message").textContent = 'لم تتمكن من حل البازل في الوقت المحدد. حاول تاني!';
+                    // عرض نافذة النجاح
+                    setTimeout(() => {
+                        winModal.classList.add('show');
+                    }, 300);
                 }
-
-                // تعطيل لوحة اللعب
-                document.getElementById("puzzle").classList.remove('active');
-            }
-        }
-
-        function showStartButton() {
-            document.getElementById("start-button").classList.add('active');
-            document.getElementById("puzzle").classList.remove('active');
-        }
-
-        function restartGame() {
-            // إخفاء جميع البوب أب وعرض زر البدء
-            document.getElementById("win-popup").classList.remove('active');
-            document.getElementById("lose-popup").classList.remove('active');
-
-            // تنظيف الكونفيتي
-            document.getElementById('confetti-container').innerHTML = '';
-
-            // إعادة تعيين اللوحة والعداد وعرض زر البدء
-            document.getElementById("puzzle").innerHTML = '';
-            // تعيين الوقت الافتراضي لضمان عمل resetTimer
-            totalTimeSeconds = LEVELS[0].time;
-            resetTimer();
-            showStartButton();
-        }
-
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-        }
-
-        // --- دالة إعداد البازل الرئيسية ---
-        function loadAndSetupPuzzle() {
-            const puzzle = document.getElementById("puzzle");
-            puzzle.innerHTML = "";
-
-            // حساب الحجم الفعلي للوحة (لأغراض تقطيع الخلفية فقط)
-            currentPuzzleSize = puzzle.clientWidth;
-
-            totalPieces = gridSize * gridSize;
-            const pieceSize = currentPuzzleSize / gridSize;
-
-            // 1. **الخطوة الهامة:** تحديد حجم الشبكة في CSS لضمان المحاذاة المربعة
-            puzzle.style.setProperty('--grid-size', gridSize);
-
-            // 2. تحديد حجم الصورة الكلي للتقطيع (Background Slicing)
-            puzzle.style.setProperty('--puzzle-size', `${currentPuzzleSize}px`);
-
-            let initialPieces = Array.from({ length: totalPieces }, (_, i) => i + 1);
-            shuffleArray(initialPieces);
-
-            // تفعيل لوحة اللعب
-            puzzle.classList.add('active');
-
-            for (let i = 0; i < totalPieces; i++) {
-                const piece = document.createElement("div");
-                piece.classList.add("piece");
-
-                const pieceNumber = initialPieces[i];
-
-                const correctX = (pieceNumber - 1) % gridSize;
-                const correctY = Math.floor((pieceNumber - 1) / gridSize);
-
-                // تطبيق الصورة المقطعة باستخدام الرابط العشوائي
-                piece.style.backgroundImage = `url(${currentImageURL})`;
-                // تحديد موضع الخلفية (Background Position) بالبيكسل لتقطيع الصورة
-                piece.style.backgroundPosition = `-${correctX * pieceSize}px -${correctY * pieceSize}px`;
-
-                // **NOTE:** dataset.index يمثل رقم القطعة الصحيح (1, 2, 3...)
-                // هذا هو المفتاح الذي نستخدمه لتبديل المواضع داخل دالة checkWin
-                piece.dataset.index = pieceNumber;
-                piece.draggable = true;
-
-                // إضافة مستمعات الأحداث للسحب والإفلات (Drag & Drop)
-                piece.addEventListener("dragstart", dragStart);
-                piece.addEventListener("dragover", dragOver);
-                piece.addEventListener("drop", dropPiece);
-                piece.addEventListener("dragend", dragEnd);
-
-                // إضافة دعم اللمس (Touch) للأجهزة المحمولة
-                piece.addEventListener("touchstart", touchStart);
-                piece.addEventListener("touchmove", touchMove);
-                piece.addEventListener("touchend", touchEnd);
-
-
-                puzzle.appendChild(piece);
-            }
-        }
-
-        // --- دوال السحب والإفلات (Drag & Drop) ---
-        let dragged;
-
-        function dragStart(e) {
-            if (!isGameRunning) {
-                e.preventDefault();
-                return;
-            }
-            dragged = this;
-            e.dataTransfer.setData("text/plain", dragged.dataset.index);
-            setTimeout(() => { dragged.classList.add('dragging'); }, 0);
-        }
-
-        function dragOver(e) {
-            e.preventDefault();
-        }
-
-        function dragEnd(e) {
-            // إزالة تأثير السحب بعد الإفلات
-            if (dragged) dragged.classList.remove('dragging');
-        }
-
-        function dropPiece(e) {
-            e.preventDefault();
-            if (!isGameRunning || !dragged) return;
-
-            const target = this;
-            if (dragged !== target) {
-                // 1. تبديل العناصر الفعلية في الـ DOM (لتغيير الترتيب الفعلي)
-                swapElementsInDOM(dragged, target);
-
-                playSound('move'); // تشغيل صوت الحركة
-
-                // **2. التحقق من الفوز بعد تبديل الترتيب الفعلي**
-                if (checkWin()) {
-                    handleWin();
-                }
-                dragged = null; // إعادة تعيين بعد التبديل
-            }
-        }
-
-        /**
-         * دالة موثوقة لتبديل المواقع الفعلية لعنصرين داخل الـ DOM.
-         * هذا يغير الترتيب الذي تراه دالة checkWin().
-         */
-        function swapElementsInDOM(elem1, elem2) {
-            const parent = elem1.parentNode;
-
-            // العنصر الذي يلي elem1 (قد يكون elem2)
-            const nextSibling1 = elem1.nextSibling;
-
-            // في حالة كان elem2 هو العنصر التالي مباشرة لـ elem1
-            if (nextSibling1 === elem2) {
-                // انقل elem2 ليصبح قبل elem1
-                parent.insertBefore(elem2, elem1);
             } else {
-                // الحالة العامة (غير متجاورين أو elem1 يتبع elem2)
-                const nextSibling2 = elem2.nextSibling;
-
-                // نقل elem1 إلى موضع elem2 (قبل العنصر الذي يلي elem2)
-                parent.insertBefore(elem1, nextSibling2);
-
-                // نقل elem2 إلى موضع elem1 الأصلي (قبل العنصر الذي كان يلي elem1)
-                parent.insertBefore(elem2, nextSibling1);
+                console.log("Puzzle not yet solved. Actual DOM order (data-correct values):", pieces.map(p => p.dataset.correct));
             }
         }
 
-
-        // --- دوال اللمس (Touch Events) ---
-        let touchDragged;
-        let touchTarget;
-
-        function touchStart(e) {
-            if (!isGameRunning || e.touches.length !== 1) {
-                e.preventDefault();
-                return;
-            }
-            touchDragged = this;
-            touchDragged.classList.add('dragging');
-            e.preventDefault();
-
-            // إزالة أي ظل من الهدف السابق
-            if (touchTarget) {
-                touchTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.2), inset 0 0 5px rgba(255, 255, 255, 0.5)';
-            }
-            touchTarget = null;
+        // --- دوال التنقل/الخروج ---
+        function goHome() {
+            winModal.classList.remove('show');
+            console.log("Navigating to Home/Selection screen.");
         }
 
-        function touchMove(e) {
-            e.preventDefault();
-            if (!touchDragged) return;
 
-            const touch = e.touches[0];
-            // استخدام elementFromPoint لإيجاد العنصر تحت إصبع المستخدم
-            const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+        // =========================================================================
+        // --- Drag and Drop for Desktop & Touch (Combined Logic) ---
+        // =========================================================================
 
-            // التحقق من أن العنصر هو قطعة بازل مختلفة عن القطعة المسحوبة
-            if (targetElement && targetElement.classList.contains('piece') && targetElement !== touchDragged) {
-                // إزالة التظليل من الهدف القديم إذا كان موجوداً
-                if (touchTarget && touchTarget !== targetElement) {
-                    touchTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.2), inset 0 0 5px rgba(255, 255, 255, 0.5)';
-                }
-                touchTarget = targetElement;
-                // إضافة تظليل للهدف الجديد
-                touchTarget.style.boxShadow = '0 0 10px 5px rgba(255, 255, 0, 0.7)';
-            } else {
-                // إذا ابتعدنا عن الهدف، نزيل التظليل
-                if (touchTarget) {
-                    touchTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.2), inset 0 0 5px rgba(255, 255, 255, 0.5)';
-                }
-                touchTarget = null;
-            }
-        }
+        let touchStartPiece = null;
+        let touchTargetPiece = null;
+        let isDragging = false;
 
-        function touchEnd(e) {
-            if (!touchDragged) return;
-
-            touchDragged.classList.remove('dragging');
-
-            if (touchTarget && touchDragged !== touchTarget) {
-                // 1. تبديل العناصر الفعلية في الـ DOM (لتغيير الترتيب الفعلي)
-                swapElementsInDOM(touchDragged, touchTarget);
-
-                playSound('move'); // تشغيل صوت الحركة
-
-                // إزالة تظليل الهدف بعد التبديل
-                touchTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.2), inset 0 0 5px rgba(255, 255, 255, 0.5)';
-
-                // **2. التحقق من الفوز بعد تبديل الترتيب الفعلي**
-                if (checkWin()) {
-                    handleWin();
-                }
-            } else if (touchTarget) {
-                // إزالة تظليل الهدف في حالة لم يحدث تبديل
-                touchTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.2), inset 0 0 5px rgba(255, 255, 255, 0.5)';
-            }
-            // إعادة تعيين المتغيرات
-            touchDragged = null;
-            touchTarget = null;
-        }
-
-        // إعادة تحميل البازل عند تغيير حجم الشاشة (لضمان إعادة حساب موضع الخلفية)
-        window.addEventListener('resize', () => {
-            if (isGameRunning) {
-                // تأخير بسيط لضمان اكتمال تغيير الحجم
-                setTimeout(loadAndSetupPuzzle, 100);
+        // Event: Start Drag/Touch
+        puzzle.addEventListener("dragstart", e => {
+            if (e.target.classList.contains("piece") && !gameCompleted) {
+                dragged = e.target;
+                isDragging = true;
+                e.dataTransfer.setData("text/plain", e.target.dataset.correct);
+                setTimeout(() => e.target.classList.add('dragging'), 0);
             }
         });
 
+        puzzle.addEventListener("touchstart", e => {
+            if (e.target.classList.contains("piece") && !gameCompleted) {
+                e.preventDefault(); // لمنع السكرول عند السحب
+                touchStartPiece = e.target;
+                isDragging = true;
+                e.target.classList.add('dragging');
+            }
+        });
 
-        // --- دالة بدء اللعبة عشوائياً ---
-        function startRandomGame() {
-            // تهيئة الصوت عند أول تفاعل
-            initializeTone();
+        // Event: Drag Over
+        puzzle.addEventListener("dragover", e => {
+            e.preventDefault();
+            if (e.target.classList.contains("piece")) {
+                e.target.classList.add('drag-over');
+            }
+        });
 
-            // 1. اختيار صورة عشوائية
-            const imageIndex = Math.floor(Math.random() * PUZZLE_IMAGES.length);
-            currentImageURL = PUZZLE_IMAGES[imageIndex];
+        puzzle.addEventListener("dragleave", e => {
+            if (e.target.classList.contains("piece")) {
+                e.target.classList.remove('drag-over');
+            }
+        });
 
-            // 2. اختيار مستوى عشوائي
-            const levelIndex = Math.floor(Math.random() * LEVELS.length);
-            const selectedLevel = LEVELS[levelIndex];
+        // Event: Drop
+        puzzle.addEventListener("drop", e => {
+            e.preventDefault();
+            const target = e.target;
 
-            gridSize = selectedLevel.size;
-            totalTimeSeconds = selectedLevel.time;
-            currentLevelName = selectedLevel.name;
+            if (target.classList.contains("piece")) {
+                target.classList.remove('drag-over');
+            }
 
-            // 3. إخفاء زر البدء
-            document.getElementById("start-button").classList.remove('active');
+            if (target.classList.contains("piece") && dragged && dragged !== target && !gameCompleted) {
+                // تنفيذ التبديل
+                swapElements(dragged, target);
+                checkWin();
+            }
+            // يجب تنظيفDragged بعد الإفلات أو انتهاء السحب
+            dragged = null;
+        });
 
-            // 4. تحميل الصورة وبدء اللعبة
-            const img = new Image();
-            img.onload = () => {
-                // بدء العداد وتحميل اللوحة فقط بعد تحميل الصورة
-                loadAndSetupPuzzle();
-                startCountdown();
-            };
+        // Event: Drag End
+        puzzle.addEventListener("dragend", e => {
+            if (e.target.classList.contains("piece")) {
+                e.target.classList.remove('dragging');
+            }
+            dragged = null;
+        });
 
-            img.onerror = () => {
-                // في حالة فشل تحميل الصورة
-                document.getElementById("lose-popup").querySelector('.popup-title').textContent = '⚠️ خطأ في تحميل الصورة';
-                document.getElementById("lose-message").textContent = `تعذر تحميل صورة البازل. يرجى التأكد من الرابط.`;
-                handleLose();
-                showStartButton();
-            };
+        // Event: Touch Move
+        puzzle.addEventListener("touchmove", e => {
+            if (touchStartPiece && e.touches.length === 1) {
+                e.preventDefault(); // لمنع تداخل السكرول أثناء حركة اللمس
+                const touch = e.touches[0];
+                const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
 
-            // استخدام اسم الملف أو معرّف المحتوى هنا
-            img.src = currentImageURL;
-        }
+                // إزالة التأثير من الهدف القديم
+                if (touchTargetPiece && touchTargetPiece.classList.contains('drag-over')) {
+                    touchTargetPiece.classList.remove('drag-over');
+                }
 
-        // تهيئة اللعبة عند التحميل الأولي
+                if (elementUnderTouch && elementUnderTouch.classList.contains("piece") && elementUnderTouch !== touchStartPiece) {
+                    // تحديد الهدف الجديد
+                    touchTargetPiece = elementUnderTouch;
+                    touchTargetPiece.classList.add('drag-over');
+                } else {
+                    touchTargetPiece = null;
+                }
+            }
+        });
+
+        // Event: Touch End
+        puzzle.addEventListener("touchend", e => {
+            if (touchStartPiece) {
+                touchStartPiece.classList.remove('dragging');
+
+                if (touchTargetPiece && touchTargetPiece.classList.contains('drag-over')) {
+                    touchTargetPiece.classList.remove('drag-over');
+                }
+
+                if (touchTargetPiece && touchStartPiece !== touchTargetPiece && !gameCompleted) {
+                    // تبديل العناصر
+                    swapElements(touchStartPiece, touchTargetPiece);
+                    checkWin();
+                }
+
+                touchStartPiece = null;
+                touchTargetPiece = null;
+                isDragging = false;
+            }
+        });
+
+        // --- التهيئة الأولية (تظهر نافذة البدء) ---
         document.addEventListener('DOMContentLoaded', () => {
-            totalTimeSeconds = LEVELS[0].time;
-            resetTimer();
-            showStartButton();
-            initializeTone(); // محاولة التهيئة المبكرة مع تفاعل المستخدم
+            // نافذة البداية تظهر بشكل افتراضي
+            //startModal.classList.add('show');
         });
     </script>
 </body>
