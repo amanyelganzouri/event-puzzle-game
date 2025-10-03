@@ -1,51 +1,42 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>لعبة البازل - Merged</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>لعبة البازل - متجاوب</title>
     <style>
-        /* (نفس أنماط CSS الموجودة سابقًا، يمكنك نسخها كما هي) */
         :root {
             --primary: #047857;
             --accent: #1e3a8a;
             --soft-bg: #d1fae5;
         }
-        /* باقي CSS كما هو */
-        * {
-            box-sizing: border-box
-        }
 
-        html, body {
-            height: 100%;
-            margin: 0
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
         body {
-            margin: 0;
             font-family: "Segoe UI", Tahoma, Arial, sans-serif;
-            background: linear-gradient(180deg,#d4f5e9 0%, #a6dcbf 100%);
-            height: 100vh;
+            background: linear-gradient(180deg, #d4f5e9, #a6dcbf);
             display: flex;
             flex-direction: column;
-            align-items: stretch;
-            overflow: hidden;
+            min-height: 100vh;
         }
 
         header {
             display: flex;
-            align-items: center;
             justify-content: space-between;
+            align-items: center;
             padding: 14px 20px;
-            gap: 12px;
             background: rgba(255,255,255,0.9);
             box-shadow: 0 8px 30px rgba(2,6,23,0.08);
         }
 
         #logo {
-            height: 64px;
+            height: 50px;
             width: auto;
-            border-radius: 8px;
         }
 
         #timerBox {
@@ -54,542 +45,343 @@
             font-weight: 800;
             color: #fff;
             background: var(--accent);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            min-width: 110px;
-            justify-content: center;
-            box-shadow: 0 8px 20px rgba(30,58,138,0.15);
-        }
-
-        .timer-green {
-            background: linear-gradient(90deg,#10b981,#059669);
-        }
-
-        .timer-yellow {
-            background: linear-gradient(90deg,#facc15,#f59e0b);
-            color: #111;
-        }
-
-        .timer-red {
-            background: linear-gradient(90deg,#ef4444,#c53030);
-        }
-
-        .flashing {
-            animation: flash 0.6s infinite alternate;
-        }
-
-        @keyframes flash {
-            from {
-                transform: scale(1)
-            }
-
-            to {
-                transform: scale(1.05)
-            }
+            min-width: 100px;
+            text-align: center;
         }
 
         main {
             flex: 1;
             display: flex;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             padding: 10px;
         }
 
-        #puzzleWrap {
-            width: 100%;
-            max-width: 900px;
-            height: calc(100vh - 220px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        #puzzleContainer {
             position: relative;
+            width: 100%;
+            max-width: 90vw;
+            aspect-ratio: 1/1; /* لضمان مربعية دائمًا */
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         #puzzle {
+            display: grid;
             width: 100%;
             height: 100%;
+            border: 6px solid #fff;
             border-radius: 14px;
-            overflow: hidden;
-            display: grid;
-            border: 6px solid #ffffff;
             box-shadow: 0 30px 60px rgba(2,6,23,0.12);
             background: #fff;
             touch-action: none;
-            pointer-events: none;
-            opacity: .6;
-            transition: .28s;
         }
 
-            #puzzle.active {
-                pointer-events: auto;
-                opacity: 1
-            }
-
+            /* أنماط الشبكة حسب الحجم */
             #puzzle[data-size="3"] {
-                grid-template-columns: repeat(3,1fr);
-                grid-template-rows: repeat(3,1fr);
+                grid-template-columns: repeat(3, 1fr);
+                grid-template-rows: repeat(3, 1fr);
             }
 
             #puzzle[data-size="4"] {
-                grid-template-columns: repeat(4,1fr);
-                grid-template-rows: repeat(4,1fr);
+                grid-template-columns: repeat(4, 1fr);
+                grid-template-rows: repeat(4, 1fr);
             }
 
         .piece {
-            width: 100%;
-            height: 100%;
             background-size: cover;
             background-position: center;
             cursor: grab;
-            transition: transform .12s, box-shadow .12s;
+            border-radius: 8px;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
             .piece.dragging {
-                transform: scale(1.03);
-                opacity: .95;
-                box-shadow: 0 18px 40px rgba(2,6,23,0.18);
-                z-index: 40;
-                cursor: grabbing
+                opacity: 0.8;
+                transform: scale(1.02);
+                box-shadow: 0 8px 20px rgba(0,0,0,0.2);
             }
 
-            .piece.drag-over {
-                outline: 4px solid rgba(5,150,105,0.18);
-            }
-
+        /* زر البداية */
         #startBtn {
             position: absolute;
-            z-index: 40;
-            left: 50%;
             top: 50%;
-            transform: translate(-50%,-50%);
-            padding: 18px 34px;
-            font-size: 1.6rem;
-            font-weight: 900;
-            border-radius: 14px;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 16px 24px;
+            font-size: 1.4rem;
             border: none;
-            color: white;
-            background: linear-gradient(45deg,#2ecc71,#27ae60);
-            box-shadow: 0 12px 30px rgba(2,6,23,0.18);
+            border-radius: 12px;
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+            color: #fff;
             cursor: pointer;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            z-index: 10;
         }
 
-        footer {
-            padding: 12px;
-            text-align: center;
-            background: var(--accent);
-            color: white;
-            font-weight: 600
-        }
-
+        /* نافذة الفوز */
         .overlay {
             position: fixed;
             inset: 0;
             background: rgba(0,0,0,0.55);
             display: flex;
-            align-items: center;
             justify-content: center;
-            z-index: 120;
+            align-items: center;
             opacity: 0;
             pointer-events: none;
-            transition: opacity .18s
+            transition: opacity 0.3s ease;
+            z-index: 100;
         }
 
             .overlay.show {
                 opacity: 1;
-                pointer-events: auto
+                pointer-events: auto;
             }
 
         .modal {
             background: var(--soft-bg);
-            padding: 28px;
-            border-radius: 14px;
-            width: min(560px,94%);
+            padding: 20px;
+            border-radius: 12px;
+            max-width: 90%;
             text-align: center;
-            box-shadow: 0 24px 60px rgba(2,6,23,0.35)
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
         }
 
             .modal h2 {
-                margin: 0 0 8px;
+                margin-bottom: 12px;
                 color: var(--accent);
-                font-size: 1.6rem
             }
 
-        .time-strong {
-            font-weight: 900;
-            color: #047857;
-            font-size: 1.2rem
-        }
-
         .btn {
-            padding: 12px 20px;
-            border-radius: 10px;
+            margin: 8px;
+            padding: 10px 20px;
             border: none;
+            border-radius: 8px;
+            font-weight: bold;
             cursor: pointer;
-            font-weight: 800;
-            margin: 6px
         }
 
             .btn.primary {
-                background: var(--accent);
-                color: white
+                background-color: var(--accent);
+                color: #fff;
             }
 
-            .btn.ghost {
-                background: transparent;
-                border: 2px solid rgba(0,0,0,0.08);
-                color: #111
-            }
-
-        .confetti {
-            position: absolute;
-            width: 10px;
-            height: 14px;
-            border-radius: 3px;
-            pointer-events: none;
-            z-index: 130;
-            opacity: 0;
-            transform: translateY(-20px) rotate(0deg);
-        }
-
-        @media (max-width:520px) {
+        /* استايلات للموبايل */
+        @media(max-width: 600px) {
             #logo {
-                height: 48px
-            }
-
-            #puzzleWrap {
-                height: calc(100vh - 200px)
-            }
-
-            .modal h2 {
-                font-size: 1.3rem
+                height: 40px;
             }
 
             #startBtn {
                 padding: 12px 20px;
-                font-size: 1.2rem
+                font-size: 1.2rem;
             }
         }
     </style>
 </head>
 <body>
+
     <header>
-        <img id="logo" src="logo.png" alt="شعار اللعبة" onerror="this.onerror=null; this.src='https://placehold.co/200x80/1e3a8a/facc15?text=Puzzle';" />
-        <div id="timerBox" class="timer-green">⏱️ <span id="timer">00:00</span></div>
+        <img id="logo" src="https://placehold.co/200x50/1e3a8a/facc15?text=Puzzle" alt="اللعبة" />
+        <div id="timerBox">⏱️ <span id="timer">00:00</span></div>
     </header>
 
     <main>
-        <div id="puzzleWrap">
-            <div id="puzzle" data-size="3" aria-label="لوحة البازل"></div>
+        <div id="puzzleContainer">
+            <div id="puzzle" data-size="3"></div>
             <button id="startBtn">▶️ ابدأ اللعب</button>
         </div>
     </main>
 
-    <footer>Eng. Amany El Ganzouri · Software & Marketing Solutions · 📞 01005336690</footer>
-
-    <!-- نوافذ الفوز والخسارة -->
-    <div id="winOverlay" class="overlay" aria-hidden="true">
+    <!-- نافذة الفوز -->
+    <div id="winOverlay" class="overlay">
         <div class="modal">
-            <h2>🎉 مبارك! حليت البازل</h2>
-            <p>الوقت المستغرق: <span id="winTime" class="time-strong">00:00</span></p>
-            <p>المستوى: <span id="winLevel" class="time-strong">—</span></p>
-            <div style="margin-top:14px">
-                <button id="playAgain" class="btn primary">🔄 إلعب مرة أخرى</button>
-                <button id="exitBtn" class="btn ghost">❌ خروج</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="loseOverlay" class="overlay" aria-hidden="true">
-        <div class="modal">
-            <h2>⏰ انتهى الوقت</h2>
-            <p>لم تتمكن من حل البازل في الوقت المحدد.</p>
-            <div style="margin-top:14px">
-                <button id="tryAgain" class="btn primary">🔄 حاول مرة أخرى</button>
-            </div>
+            <h2>🎉 مبروك! حليت البازل</h2>
+            <p>الوقت: <span id="finalTime">00:00</span></p>
+            <button class="btn primary" id="playAgainBtn">🔄 لعبة جديدة</button>
         </div>
     </div>
 
     <script>
-        const IMAGES = ["1.jpg", "5.png"]; // ضع الصور في نفس المجلد أو استبدل بمسارات صحيحة
-        const LEVELS = [{ name: 'سهل', size: 3, time: 90 }, { name: 'متوسط', size: 4, time: 120 }];
-
         const puzzle = document.getElementById('puzzle');
         const startBtn = document.getElementById('startBtn');
-        const timerEl = document.getElementById('timer');
-        const timerBox = document.getElementById('timerBox');
-
+        const timerSpan = document.getElementById('timer');
+        const finalTimeSpan = document.getElementById('finalTime');
         const winOverlay = document.getElementById('winOverlay');
-        const loseOverlay = document.getElementById('loseOverlay');
-        const playAgain = document.getElementById('playAgain');
-        const tryAgain = document.getElementById('tryAgain');
-        const exitBtn = document.getElementById('exitBtn');
-        const winTime = document.getElementById('winTime');
-        const winLevel = document.getElementById('winLevel');
+        const playAgainBtn = document.getElementById('playAgainBtn');
 
-        let gridSize = 3, total = 9, board = [], imgSrc = '';
-        let timerInterval = null, totalTime = 90, timeLeft = 90;
-        let running = false, startTime = 0;
-        let currentLevelName = '';
+        let size = 3; // حجم المصفوفة، 3 أو 4
+        let totalPieces = size * size;
+        let board = [];
+        let imageSrc = 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-4.0.4&auto=format&fit=crop&w=800&q=80'; // صورة
+        let timer = null;
+        let secondsPassed = 0;
 
-        let dragFromPos = null, touchTarget = null;
+        let dragStartPos = null;
 
-        startBtn.addEventListener('click', () => { startBtn.style.display = 'none'; startRandom(); });
-        playAgain.addEventListener('click', () => { hideOverlays(); startRandom(); });
-        tryAgain.addEventListener('click', () => { hideOverlays(); startRandom(); });
-        exitBtn.addEventListener('click', () => { hideOverlays(); startBtn.style.display = 'block'; });
-
-        // بداية اللعبة
-        function startRandom() {
-            const lvl = LEVELS[Math.floor(Math.random() * LEVELS.length)];
-            gridSize = lvl.size; total = gridSize * gridSize; totalTime = lvl.time; timeLeft = totalTime;
-            imgSrc = IMAGES[Math.floor(Math.random() * IMAGES.length)];
-            puzzle.setAttribute('data-size', gridSize);
-            puzzle.classList.add('active');
-            generateBoard();
-            renderBoard();
-            startTimer();
-            startTime = Date.now();
-            currentLevelName = lvl.name;
-        }
-
-        // توليد اللوحة
-        function generateBoard() {
-            board = Array.from({ length: total }, (_, i) => i);
+        // وظيفة التوليد
+        function initGame() {
+            // إعداد اللوحة
+            document.documentElement.style.setProperty('--grid-size', size);
+            puzzle.setAttribute('data-size', size);
+            board = Array.from({ length: totalPieces }, (_, i) => i);
             shuffle(board);
-            // إذا كانت مرتبة (مفككة) تمامًا، أعِد التوليد
-            if (board.every((v, i) => v === i)) shuffle(board);
-            // إذا كانت مرتبة الآن، حل
-            if (checkWin()) doWin();
+            renderPieces();
+            startTimer();
         }
 
-        // عشوائية
-        function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]]; } }
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
 
-        // عرض اللوحة
-        function renderBoard() {
+        // عرض القطع
+        function renderPieces() {
             puzzle.innerHTML = '';
-            const wrapW = puzzle.clientWidth || puzzle.offsetWidth || 600;
-            const piecePixel = Math.floor(wrapW / gridSize);
-            const bgSize = piecePixel * gridSize;
-            board.forEach((val, pos) => {
+            for (let i = 0; i < board.length; i++) {
                 const piece = document.createElement('div');
-                piece.className = 'piece'; piece.draggable = true;
-                piece.style.backgroundImage = `url("${imgSrc}")`;
-                piece.style.backgroundSize = `${bgSize}px ${bgSize}px`;
-                const x = val % gridSize, y = Math.floor(val / gridSize);
-                piece.style.backgroundPosition = `${-x * piecePixel}px ${-y * piecePixel}px`;
-                piece.dataset.val = val;
-                piece.dataset.pos = pos;
+                piece.className = 'piece';
+                piece.setAttribute('draggable', 'true');
+                piece.dataset.pos = i; // موضعها
+                piece.dataset.val = board[i]; // القيمة
+                // خلفية الصورة
+                const bgSizePercent = 100 / size;
+                const bgX = -(board[i] % size) * bgSizePercent;
+                const bgY = -Math.floor(board[i] / size) * bgSizePercent;
+                piece.style.backgroundImage = `url("${imageSrc}")`;
+                piece.style.backgroundSize = `${size * 100}% ${size * 100}%`;
+                piece.style.backgroundPosition = `${bgX}% ${bgY}%`;
 
-                // أحداث السحب واللمس
+                // أحداث السحب
                 piece.addEventListener('dragstart', onDragStart);
-                piece.addEventListener('dragover', e => e.preventDefault());
                 piece.addEventListener('drop', onDrop);
-                piece.addEventListener('dragend', onDragEnd);
-                // touch
+                piece.addEventListener('dragover', e => e.preventDefault());
+
+                // أحداث اللمس
                 piece.addEventListener('touchstart', onTouchStart, { passive: false });
                 piece.addEventListener('touchmove', onTouchMove, { passive: false });
                 piece.addEventListener('touchend', onTouchEnd);
 
                 puzzle.appendChild(piece);
-            });
+            }
         }
 
-        // تبديل بين قطعتين (محددة)
+        // التبديل
         function swapPieces(posA, posB) {
-            // تحديث المصفوفة
-            const temp = board[posA];
-            board[posA] = board[posB];
-            board[posB] = temp;
+            // تبادل القيم في المصفوفة
+            [board[posA], board[posB]] = [board[posB], board[posA]];
+
             // تحديث DOM
             const children = Array.from(puzzle.children);
-            const pieceA = children.find(c => c.dataset.pos == posA);
-            const pieceB = children.find(c => c.dataset.pos == posB);
-            if (pieceA && pieceB) {
-                // تبادل مواضع DOM
-                puzzle.insertBefore(pieceB, pieceA);
-                puzzle.insertBefore(pieceA, children[children.indexOf(pieceB)]);
-                // تحديث بيانات المواضع
-                if (pieceA) pieceA.dataset.pos = posA;
-                if (pieceB) pieceB.dataset.pos = posB;
+            const elA = children.find(c => c.dataset.pos == posA);
+            const elB = children.find(c => c.dataset.pos == posB);
+
+            if (elA && elB) {
+                // تبادل أماكن العناصر
+                puzzle.insertBefore(elB, elA);
+                puzzle.insertBefore(elA, children[children.indexOf(elB)]);
+                // تحديث البيانات
+                elA.dataset.pos = posA;
+                elB.dataset.pos = posB;
             }
+
+            // بعد التبديل، نتحقق من الفوز
+            if (checkWin()) showWin();
         }
 
-        // التحقق من الفوز
+        // تحقق من الفوز
         function checkWin() {
-            for (let i = 0; i < board.length; i++) {
-                if (board[i] !== i) return false;
-            }
-            return true;
+            return board.every((val, index) => val === index);
         }
 
-        // عند الفوز
-        function doWin() {
-            if (running) {
-                running = false;
-                clearInterval(timerInterval);
-                const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
-                winTime.textContent = formatTime(elapsedSeconds);
-                winLevel.textContent = currentLevelName || '-';
-                showWin();
-                spawnConfetti();
-            }
-        }
-
-        // إظهار نافذة الفوز
+        // عرض نافذة الفوز
         function showWin() {
-            winOverlay.classList.add('show');
-            winOverlay.setAttribute('aria-hidden', 'false');
+            clearInterval(timer);
+            // عرض الوقت النهائي
+            finalTimeSpan.textContent = formatTime(secondsPassed);
+            // إظهار النافذة
+            document.getElementById('winOverlay').classList.add('show');
         }
 
-        // إخفاء النوافذ
-        function hideOverlays() {
-            winOverlay.classList.remove('show');
-            loseOverlay.classList.remove('show');
-            winOverlay.setAttribute('aria-hidden', 'true');
-            loseOverlay.setAttribute('aria-hidden', 'true');
-            clearConfetti();
-        }
-
-        // توقيت اللعبة
-        function startTimer() {
-            clearInterval(timerInterval);
-            running = true;
-            updateTimerDisplay();
-            timerInterval = setInterval(() => {
-                if (!running) return;
-                timeLeft--;
-                updateTimerDisplay();
-                if (timeLeft <= 0) {
-                    doLose();
-                }
-            }, 1000);
-        }
-
-        function updateTimerDisplay() {
-            timerEl.textContent = formatTime(timeLeft);
-            const ratio = timeLeft / totalTime;
-            timerBox.className = '';
-            if (timeLeft <= 10) {
-                timerBox.className = 'timer-red flashing';
-            } else if (ratio < 0.33) {
-                timerBox.className = 'timer-red';
-            } else if (ratio < 0.66) {
-                timerBox.className = 'timer-yellow';
-            } else {
-                timerBox.className = 'timer-green';
-            }
-        }
-
-        function formatTime(s) {
-            if (s < 0) s = 0;
-            const m = Math.floor(s / 60);
-            const sec = s % 60;
-            return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
-        }
-
-        // عند الخسارة
-        function doLose() {
-            if (running) {
-                running = false;
-                clearInterval(timerInterval);
-                showLose();
-            }
-        }
-
-        function showLose() {
-            loseOverlay.classList.add('show');
-            loseOverlay.setAttribute('aria-hidden', 'false');
-        }
-
-        // Confetti
-        function spawnConfetti() {
-            for (let i = 0; i < 40; i++) {
-                const c = document.createElement('div');
-                c.className = 'confetti';
-                c.style.left = Math.random() * 100 + '%';
-                c.style.top = '-10%';
-                c.style.background = ['#facc15', '#ef4444', '#3b82f6', '#10b981'][Math.floor(Math.random() * 4)];
-                document.body.appendChild(c);
-                const dur = 2000 + Math.random() * 2200;
-                c.animate([
-                    { transform: `translateY(-20px) rotate(${Math.random() * 360}deg)`, opacity: 1 },
-                    { transform: `translateY(${window.innerHeight + 200}px) rotate(${Math.random() * 1440}deg)`, opacity: 0 }
-                ], { duration: dur, easing: 'cubic-bezier(.2,.7,.2,1)' });
-                setTimeout(() => { try { c.remove(); } catch (e) { } }, dur + 200);
-            }
-        }
-        function clearConfetti() {
-            document.querySelectorAll('.confetti').forEach(c => c.remove());
-        }
-
-        // أحداث السحب واللمس
+        // أحداث السحب
         function onDragStart(e) {
-            if (!running) { e.preventDefault(); return; }
-            dragFromPos = Number(e.currentTarget.dataset.pos);
-            e.currentTarget.classList.add('dragging');
-            try { e.dataTransfer.setData('text/plain', ''); } catch (_) { }
+            dragStartPos = Number(e.currentTarget.dataset.pos);
         }
         function onDrop(e) {
             e.preventDefault();
-            if (!running || dragFromPos === null) return;
-            const toPos = Number(e.currentTarget.dataset.pos);
-            if (dragFromPos !== toPos) {
-                swapPieces(dragFromPos, toPos);
-                if (checkWin()) doWin();
+            const targetPos = Number(e.currentTarget.dataset.pos);
+            if (dragStartPos !== null && dragStartPos !== targetPos) {
+                swapPieces(dragStartPos, targetPos);
             }
-            dragFromPos = null;
+            dragStartPos = null;
         }
-        function onDragEnd(e) {
-            e.currentTarget.classList.remove('dragging');
-        }
+
+        // أحداث اللمس
+        let touchStartPos = null;
+        let touchTarget = null;
         function onTouchStart(e) {
-            if (!running) { e.preventDefault(); return; }
             e.preventDefault();
-            const el = e.currentTarget;
-            el.classList.add('dragging');
-            dragFromPos = Number(el.dataset.pos);
-            touchTarget = null;
+            touchStartPos = Number(e.currentTarget.dataset.pos);
         }
         function onTouchMove(e) {
-            if (!running) return;
             e.preventDefault();
             const t = e.touches[0];
             const el = document.elementFromPoint(t.clientX, t.clientY);
-            const piece = el?.closest?.('.piece') || null;
-            if (touchTarget && touchTarget !== piece) touchTarget.classList.remove('drag-over');
-            if (piece && piece !== e.currentTarget) {
+            const piece = el?.closest('.piece');
+            if (piece && piece.dataset.pos != touchStartPos) {
                 touchTarget = piece;
-                touchTarget.classList.add('drag-over');
-            } else {
-                if (touchTarget) {
-                    touchTarget.classList.remove('drag-over');
-                    touchTarget = null;
-                }
             }
         }
         function onTouchEnd(e) {
-            if (!running) return;
             e.preventDefault();
-            const el = e.currentTarget;
-            el.classList.remove('dragging');
-            if (touchTarget) {
-                const to = Number(touchTarget.dataset.pos);
-                if (dragFromPos !== to) {
-                    swapPieces(dragFromPos, to);
-                    if (checkWin()) doWin();
+            if (touchTarget && touchStartPos !== null) {
+                const targetPos = Number(touchTarget.dataset.pos);
+                if (touchStartPos !== targetPos) {
+                    swapPieces(touchStartPos, targetPos);
                 }
-                touchTarget.classList.remove('drag-over');
-                touchTarget = null;
             }
-            dragFromPos = null;
+            touchStartPos = null;
+            touchTarget = null;
         }
 
-        // تنفيذ التبديل بين قطعتين
-        // يتم استدعاؤه عند التفاعل مع القطع
-        // استبدل استدعاءات `swapPositions` بـ `swapPieces`
+        // Timer functions
+        function startTimer() {
+            secondsPassed = 0;
+            timerSpan.textContent = formatTime(0);
+            clearInterval(timer);
+            timer = setInterval(() => {
+                secondsPassed++;
+                timerSpan.textContent = formatTime(secondsPassed);
+            }, 1000);
+        }
+
+        function formatTime(sec) {
+            const m = Math.floor(sec / 60);
+            const s = sec % 60;
+            return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        // زر بداية
+        startBtn.addEventListener('click', () => {
+            startBtn.style.display = 'none';
+            initGame();
+        });
+
+        // زر إعادة اللعب
+        document.getElementById('playAgainBtn').addEventListener('click', () => {
+            document.getElementById('winOverlay').classList.remove('show');
+            initGame();
+        });
+
+        // عند حل البازل
+        // يتم استدعاؤه داخل swapPieces عند التحقق من الفوز
+
+        // بداية اللعب
+        initGame();
+
     </script>
 </body>
 </html>
