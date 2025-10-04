@@ -1,423 +1,371 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>لعبة البازل - متجاوب</title>
-<style>
-    :root {
-        --primary: #047857;
-        --accent: #1e3a8a;
-        --soft-bg: #d1fae5;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puzzle Challenge</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Segoe UI", sans-serif;
+            background: linear-gradient(135deg, #d4f5e9, #a6dcbf);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
 
-    * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-    }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #ffffffdd;
+            padding: 10px 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
 
-    body {
-        font-family: "Segoe UI", Tahoma, Arial, sans-serif;
-        background: linear-gradient(180deg, #d4f5e9, #a6dcbf);
-        display: flex;
-        flex-direction: column;
-        min-height: 100vh;
-        overflow: hidden;
-    }
+            header img {
+                height: 50px;
+            }
 
-    header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 14px 20px;
-        background: rgba(255,255,255,0.9);
-        box-shadow: 0 8px 30px rgba(2,6,23,0.08);
-    }
+        #timer {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #1e3a8a;
+        }
 
-    #logo {
-        height: 50px;
-        width: auto;
-        border-radius: 8px;
-    }
+        #game-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
 
-    #timerBox {
-        font-weight: 800;
-        color: #fff;
-        background: var(--accent);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        min-width: 110px;
-        justify-content: center;
-        box-shadow: 0 8px 20px rgba(30,58,138,0.15);
-        padding: 8px 12px;
-        border-radius: 50px;
-    }
-    /* ألوان العدادات */
-    .timer-green { background: linear-gradient(90deg,#10b981,#059669); }
-    .timer-yellow { background: linear-gradient(90deg,#facc15,#f59e0b); color: #111; }
-    .timer-red { background: linear-gradient(90deg,#ef4444,#c53030); }
+        #puzzle {
+            display: grid;
+            background: #fff;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            border-radius: 12px;
+            overflow: hidden;
+            user-select: none;
+            width: 80vmin;
+            height: 80vmin;
+        }
 
-    main {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 10px;
-    }
+        .piece {
+            background-size: cover;
+            cursor: grab;
+            transition: transform 0.2s;
+        }
 
-    #puzzleWrap {
-        position: relative;
-        width: 100%;
-        max-width: 900px;
-        height: calc(100vh - 220px);
-        max-width: 90vw;
-        aspect-ratio: 1/1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+            .piece.dragging {
+                opacity: 0.5;
+            }
 
-    #puzzle {
-        display: grid;
-        width: 100%;
-        height: 100%;
-        border: 6px solid #fff;
-        border-radius: 14px;
-        overflow: hidden;
-        box-shadow: 0 30px 60px rgba(2,6,23,0.12);
-        background: #fff;
-        touch-action: none;
-        pointer-events: none;
-        opacity: 0.6;
-        transition: 0.28s;
-    }
+        #popup, #message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #ffffffee;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 1.3em;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 10;
+        }
 
-    #puzzle.active {
-        pointer-events: auto;
-        opacity: 1;
-    }
+            #popup button, #message button {
+                margin-top: 15px;
+                padding: 12px 24px;
+                border: none;
+                border-radius: 8px;
+                background: #1e3a8a;
+                color: white;
+                cursor: pointer;
+            }
 
-    /* أنماط الشبكة حسب الحجم */
-    #puzzle[data-size="3"] {
-        grid-template-columns: repeat(3, 1fr);
-        grid-template-rows: repeat(3, 1fr);
-    }
+                #popup button:hover, #message button:hover {
+                    background: #2b5ac6;
+                }
 
-    #puzzle[data-size="4"] {
-        grid-template-columns: repeat(4, 1fr);
-        grid-template-rows: repeat(4, 1fr);
-    }
-
-    .piece {
-        width: 100%;
-        height: 100%;
-        background-size: cover;
-        background-position: center;
-        cursor: grab;
-        border-radius: 8px;
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    .piece.dragging {
-        transform: scale(1.03);
-        opacity: 0.95;
-        box-shadow: 0 18px 40px rgba(2,6,23,0.18);
-        z-index: 40;
-        cursor: grabbing;
-    }
-
-    .piece.drag-over {
-        outline: 4px solid rgba(5,150,105,0.18);
-        opacity: 0.8;
-        transform: scale(1.02);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-    }
-
-    /* زر البداية */
-    #startBtn {
-        position: absolute;
-        z-index: 40;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-        padding: 16px 24px;
-        font-size: 1.4rem;
-        font-weight: 900;
-        border-radius: 12px;
-        background: linear-gradient(45deg,#2ecc71,#27ae60);
-        box-shadow: 0 12px 30px rgba(2,6,23,0.18);
-        border: none;
-        color: #fff;
-        cursor: pointer;
-    }
-
-    footer {
-        padding: 12px;
-        text-align: center;
-        background: var(--accent);
-        color: #fff;
-        font-weight: 600;
-    }
-
-    /* نوافذ الفوز والخسارة */
-    .overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.55);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.18s ease;
-        z-index: 120;
-    }
-    .overlay.show {
-        opacity: 1;
-        pointer-events: auto;
-    }
-
-    .modal {
-        background: var(--soft-bg);
-        padding: 28px;
-        border-radius: 14px;
-        width: min(560px, 94%);
-        max-width: 90%;
-        text-align: center;
-        box-shadow: 0 24px 60px rgba(2,6,23,0.35);
-    }
-
-    .modal h2 {
-        margin: 0 0 8px;
-        margin-bottom: 12px;
-        color: var(--accent);
-        font-size: 1.6rem;
-    }
-
-    .time-strong {
-        font-weight: 900;
-        color: #047857;
-        font-size: 1.2rem;
-    }
-
-    .btn {
-        padding: 12px 20px;
-        border-radius: 10px;
-        margin: 8px;
-        font-weight: 800;
-        border: none;
-        cursor: pointer;
-    }
-
-    .btn.primary { background: var(--accent); color: #fff; }
-    .btn.ghost {
-        background: transparent;
-        border: 2px solid rgba(0,0,0,0.08);
-        color: #111;
-        background-color: var(--accent);
-        color: #fff;
-    }
-
-    /* استايلات موبايل */
-    @media (max-width: 520px) {
-        #logo { height: 48px; }
-        #puzzleWrap { height: calc(100vh - 200px); }
-        .modal h2 { font-size: 1.3rem; height: 40px; }
-        #startBtn { padding: 12px 20px; font-size: 1.2rem; }
-    }
-</style>
+        footer {
+            text-align: center;
+            padding: 12px;
+            background: #1e3a8a;
+            color: white;
+            font-size: 0.9em;
+        }
+    </style>
 </head>
 <body>
+    <header>
+        <img src="logo.png" alt="شعار اللعبة"
+             onerror="this.onerror=null; this.src='https://placehold.co/120x50/1e3a8a/facc15?text=Puzzle';" />
+        <div id="timer">⏱️ 00:00</div>
+    </header>
 
-<header>
-    <img id="logo" src="logo.png" alt="شعار اللعبة" onerror="this.onerror=null; this.src='https://placehold.co/200x80/1e3a8a/facc15?text=Puzzle';" />
-    <div id="timerBox" class="timer-green">⏱️ <span id="timer">00:00</span></div>
-</header>
+    <div id="game-container">
+        <div id="puzzle"></div>
 
-<main>
-    <div id="puzzleWrap">
-        <button id="startBtn">▶️ ابدأ اللعب</button>
-        <div id="puzzle" data-size="3" aria-label="لوحة البازل"></div>
-    </div>
-</main>
-
-<footer>Eng. Amany El Ganzouri · Software & Marketing Solutions · 📞 01005336690</footer>
-
-<!-- نوافذ الفوز والخسارة -->
-<div id="winOverlay" class="overlay" aria-hidden="true">
-    <div class="modal">
-        <h2>🎉 مبروك! حليت البازل</h2>
-        <p>الوقت المستغرق: <span id="winTime" class="time-strong">00:00</span></p>
-        <p>المستوى: <span id="winLevel" class="time-strong">—</span></p>
-        <div style="margin-top:14px">
-            <button id="playAgain" class="btn primary">🔄 إلعب مرة أخرى</button>
-            <button id="exitBtn" class="btn ghost">❌ خروج</button>
+        <!-- Popup البداية -->
+        <div id="popup">
+            <p>ابدا الــلعـب</p>
+            <button id="playBtn">▶ Play</button>
         </div>
+
+        <!-- رسالة الفوز/الخسارة -->
+        <div id="message"></div>
     </div>
-</div>
 
-<script>
-    // جميع المتغيرات والدوال
-    const puzzle = document.getElementById('puzzle');
-    const startBtn = document.getElementById('startBtn');
-    const timerSpan = document.getElementById('timer');
-    const finalTimeSpan = document.getElementById('winTime');
-    const winOverlay = document.getElementById('winOverlay');
-    const playAgainBtn = document.getElementById('playAgain');
-    const exitBtn = document.getElementById('exitBtn');
+    <footer>
+        Powered by Eng. Amany El Ganzouri ✨<br>
+        📞 01005336690
+    </footer>
 
-    let size = 3; // حجم البازل
-    let totalPieces = size * size;
-    let board = [];
-    let imageSrc = 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-4.0.4&auto=format&fit=crop&w=800&q=80';
+    <script>
 
-    let timer = null;
-    let secondsPassed = 0;
-    let dragged = null; // القطعة المسحوبة
 
-    // أحداث الأزرار
-    startBtn.addEventListener('click', () => { startBtn.style.display = 'none'; initGame(); });
-    document.getElementById('playAgain').addEventListener('click', () => { hideOverlays(); initGame(); });
-    document.getElementById('exitBtn').addEventListener('click', () => { hideOverlays(); startBtn.style.display='block'; });
+        const images = ["1.jpg", "5.png", "2.png"]; // صور البازل
 
-    // وظيفة تهيئة اللعبة
-    function initGame() {
-        board = Array.from({ length: totalPieces }, (_, i) => i);
-        shuffle(board);
-        renderPieces();
-        startTimer();
-    }
 
-    // وظيفة التبديل المباشر بين قطعتين
-    function swapPieces(posA, posB) {
-        [board[posA], board[posB]] = [board[posB], board[posA]];
+        const puzzle = document.getElementById("puzzle");
+        const timerDisplay = document.getElementById("timer");
+        const popup = document.getElementById("popup");
+        const playBtn = document.getElementById("playBtn");
+        const messageBox = document.getElementById("message");
 
-        const children = Array.from(puzzle.children);
-        const elA = children.find(c => c.dataset.pos == posA);
-        const elB = children.find(c => c.dataset.pos == posB);
+        let size, timeLimit, shuffled = [], correctOrder = [];
+        let startTime, timerInterval, currentImage;
 
-        if (elA && elB) {
-            puzzle.insertBefore(elB, elA);
-            puzzle.insertBefore(elA, elB.nextSibling);
-            elA.dataset.pos = posA;
-            elB.dataset.pos = posB;
+        window.onload = () => { popup.style.display = "block"; };
+
+        playBtn.addEventListener("click", () => {
+            popup.style.display = "none";
+            startGame();
+        });
+
+        function startGame() {
+            size = Math.random() > 0.5 ? 3 : 4; // عشوائي 3×3 أو 4×4
+            timeLimit = size === 3 ? 90 : 120;
+
+            currentImage = images[Math.floor(Math.random() * images.length)];
+            puzzle.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+            puzzle.innerHTML = "";
+
+            shuffled = [];
+            correctOrder = [];
+
+            for (let i = 0; i < size * size; i++) {
+                correctOrder.push(i);
+                shuffled.push(i);
+            }
+
+            shuffled.sort(() => Math.random() - 0.5);
+
+            shuffled.forEach((val, i) => {
+                const piece = document.createElement("div");
+                piece.classList.add("piece");
+                piece.style.backgroundImage = `url(${currentImage})`;
+                updatePieceBackground(piece, val);
+
+                piece.draggable = true;
+                piece.addEventListener("dragstart", dragStart);
+                piece.addEventListener("dragover", dragOver);
+                piece.addEventListener("drop", dropPiece);
+                piece.addEventListener("dragend", dragEnd);
+
+                // دعم اللمس
+                piece.addEventListener("touchstart", touchStart);
+                piece.addEventListener("touchmove", touchMove);
+                piece.addEventListener("touchend", touchEnd);
+
+                puzzle.appendChild(piece);
+            });
+
+            startTime = Date.now();
+            clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimer, 1000);
         }
-        checkWin();
-    }
 
-    // التحقق من الفوز
-    function checkWin() {
-        return board.every((val, index) => val === index);
-    }
-
-    // عرض نافذة الفوز
-    function showWin() {
-        clearInterval(timer);
-        finalTimeSpan.textContent = formatTime(secondsPassed);
-        winOverlay.classList.add('show');
-    }
-
-    // بدء العد التنازلي
-    function startTimer() {
-        secondsPassed = 0;
-        timerSpan.textContent = formatTime(0);
-        clearInterval(timer);
-        timer = setInterval(() => {
-            secondsPassed++;
-            timerSpan.textContent = formatTime(secondsPassed);
-        }, 1000);
-    }
-
-    // تنسيق الوقت
-    function formatTime(sec) {
-        const m = Math.floor(sec / 60);
-        const s = sec % 60;
-        return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-    }
-
-    // توليد وعرض القطع
-    function renderPieces() {
-        puzzle.innerHTML = '';
-        for (let i=0; i<board.length; i++) {
-            const piece = document.createElement('div');
-            piece.className = 'piece';
-            piece.setAttribute('draggable', 'true');
-            piece.dataset.pos = i;
-            piece.dataset.val = board[i];
-
-            // خلفية الصورة
-            const bgSizePercent = 100 / size;
-            const bgX = -(board[i] % size) * bgSizePercent;
-            const bgY = -Math.floor(board[i] / size) * bgSizePercent;
-            piece.style.backgroundImage = `url("${imageSrc}")`;
+        function updatePieceBackground(piece, val) {
+            const x = (val % size) * (100 / (size - 1));
+            const y = Math.floor(val / size) * (100 / (size - 1));
+            piece.style.backgroundPosition = `${x}% ${y}%`;
             piece.style.backgroundSize = `${size * 100}% ${size * 100}%`;
-            piece.style.backgroundPosition = `${bgX}% ${bgY}%`;
-
-            // أحداث السحب
-            piece.addEventListener('dragstart', e => {
-                if (e.target.classList.contains("piece")) {
-                    dragged = e.target;
-                    e.target.classList.add('dragging');
-                }
-            });
-            piece.addEventListener('dragend', e => {
-                if (e.target.classList.contains("piece")) {
-                    e.target.classList.remove('dragging');
-                }
-            });
-            piece.addEventListener('dragover', e => {
-                e.preventDefault();
-                if (e.target.classList.contains("piece")) {
-                    e.target.classList.add('drag-over');
-                }
-            });
-            piece.addEventListener('dragleave', e => {
-                if (e.target.classList.contains("piece")) {
-                    e.target.classList.remove('drag-over');
-                }
-            });
-            piece.addEventListener('drop', e => {
-                e.preventDefault();
-                if (e.target.classList.contains("piece")) {
-                    e.target.classList.remove('drag-over');
-                    if (dragged && dragged !== e.target) {
-                        const indexA = Number(dragged.dataset.pos);
-                        const indexB = Number(e.target.dataset.pos);
-                        swapPieces(indexA, indexB);
-                    }
-                }
-            });
-
-            // أحداث اللمس
-            piece.addEventListener("touchstart", e => {
-                if (e.target.classList.contains("piece")) {
-                    dragged = e.target;
-                    e.target.classList.add('dragging');
-                }
-            }, { passive: true });
-            piece.addEventListener("touchend", e => {
-                if (dragged && dragged.classList.contains('dragging')) {
-                    dragged.classList.remove('dragging');
-                    const touch = e.changedTouches[0];
-                    const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
-                    if (targetElement && targetElement.classList.contains("piece") && targetElement !== dragged) {
-                        const indexA = Number(dragged.dataset.pos);
-                        const indexB = Number(targetElement.dataset.pos);
-                        swapPieces(indexA, indexB);
-                    }
-                    dragged = null;
-                }
-            }, { passive: true });
-
-            puzzle.appendChild(piece);
         }
-    }
 
-    // بداية اللعبة عند الضغط على زر البداية
-    initGame();
+        function updateTimer() {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const remaining = timeLimit - elapsed;
+            const min = String(Math.floor(remaining / 60)).padStart(2, "0");
+            const sec = String(remaining % 60).padStart(2, "0");
+            timerDisplay.textContent = `⏱️ ${min}:${sec}`;
 
-</script>
+            if (remaining <= 0) endGame(false);
+        }
+
+        function checkWin() {
+            const current = [...puzzle.children].map(piece =>
+                piece.style.backgroundPosition
+            );
+            const target = correctOrder.map(val =>
+                `${(val % size) * (100 / (size - 1))}% ${(Math.floor(val / size)) * (100 / (size - 1))}%`
+            );
+            return JSON.stringify(current) === JSON.stringify(target);
+        }
+
+        function endGame(win) {
+            clearInterval(timerInterval);
+            messageBox.style.display = "block";
+            messageBox.innerHTML = win
+                ? `🎉 مبروك! <br> حلّيت البازل في ${(Date.now() - startTime) / 1000 | 0} ثانية <br><button onclick="restart()">Play Again</button>`
+                : `⏰ الوقت خلص! <br> حاول مرة تانية <br><button onclick="restart()">Play Again</button>`;
+        }
+
+        function restart() {
+            messageBox.style.display = "none";
+            popup.style.display = "block";
+        }
+
+        // --- دوال Drag & Drop ---
+        // متغير لتخزين العنصر الذي يتم سحبه
+        let dragged = null;
+
+        // دعم السحب (Drag & Drop)
+        function dragStart(e) {
+            if (e.target.classList.contains("piece")) {
+                dragged = e.target;
+                e.target.classList.add("dragging");
+            }
+        }
+
+        function dragEnd(e) {
+            if (e.target.classList.contains("piece")) {
+                e.target.classList.remove("dragging");
+            }
+        }
+
+        function dragOver(e) {
+            e.preventDefault(); // لمنع الافتراضي
+            if (e.target.classList.contains("piece")) {
+                e.target.classList.add("drag-over");
+            }
+        }
+
+        function dragLeave(e) {
+            if (e.target.classList.contains("piece")) {
+                e.target.classList.remove("drag-over");
+            }
+        }
+
+        function dropPiece(e) {
+            e.preventDefault();
+
+            // إزالة نمط 'drag-over'
+            if (e.target.classList.contains("piece")) {
+                e.target.classList.remove("drag-over");
+            }
+
+            // التحقق من أن العنصر المستهدف قطعة وليس نفسه
+            if (e.target.classList.contains("piece") && dragged !== e.target) {
+                const draggedParent = dragged.parentNode;
+                const targetParent = e.target.parentNode;
+
+                // تذكر العنصر التالي لكل قطعة
+                const draggedNext = dragged.nextSibling;
+                const targetNext = e.target.nextSibling;
+
+                // التعامل مع الحالة الخاصة إذا كانت القطعتان متجاورتان
+                if (draggedNext === e.target) {
+                    // القطعة المسحوبة تأتي قبل الهدف مباشرة
+                    draggedParent.insertBefore(e.target, dragged);
+                } else if (targetNext === dragged) {
+                    // الهدف يأتي قبل القطعة المسحوبة مباشرة
+                    targetParent.insertBefore(dragged, e.target);
+                } else {
+                    // قطع غير متجاورة: نقوم بتبديل أماكنها
+                    draggedParent.insertBefore(e.target, draggedNext);
+                    targetParent.insertBefore(dragged, targetNext);
+                }
+
+                // بعد التبديل نتحقق من حالة الفوز
+                checkWin();
+            }
+        }
+
+        // ربط أحداث السحب على العنصر puzzle
+        puzzle.addEventListener("dragstart", dragStart);
+        puzzle.addEventListener("dragend", dragEnd);
+        puzzle.addEventListener("dragover", dragOver);
+        puzzle.addEventListener("dragleave", dragLeave);
+        puzzle.addEventListener("drop", dropPiece);
+
+        // --- دعم اللمس (Touch) ---
+
+        let touchStartElement = null;
+
+        function touchStart(e) {
+            if (e.target.classList.contains("piece")) {
+                touchStartElement = e.target;
+                e.target.classList.add("dragging");
+            }
+        }
+
+        function touchMove(e) {
+            e.preventDefault(); // لمنع السحب الافتراضي
+        }
+
+        function touchEnd(e) {
+            if (touchStartElement) {
+                touchStartElement.classList.remove("dragging");
+                const touch = e.changedTouches[0];
+
+                // تحديد العنصر الهدف عند نهاية اللمس
+                const target = document.elementFromPoint(touch.clientX, touch.clientY);
+
+                if (
+                    target &&
+                    target.classList.contains("piece") &&
+                    target !== touchStartElement
+                ) {
+                    const draggedParent = touchStartElement.parentNode;
+                    const targetParent = target.parentNode;
+
+                    const draggedNext = touchStartElement.nextSibling;
+                    const targetNext = target.nextSibling;
+
+                    // التعامل مع الحالة الخاصة إذا كانت القطعتان متجاورتان
+                    if (draggedNext === target) {
+                        // القطعة المسحوبة تأتي قبل الهدف مباشرة
+                        draggedParent.insertBefore(target, touchStartElement);
+                    } else if (targetNext === touchStartElement) {
+                        // الهدف يأتي قبل القطعة المسحوبة مباشرة
+                        targetParent.insertBefore(touchStartElement, target);
+                    } else {
+                        // قطع غير متجاورة: نقوم بتبديل أماكنها
+                        draggedParent.insertBefore(target, draggedNext);
+                        targetParent.insertBefore(touchStartElement, targetNext);
+                    }
+
+                    // بعد التبديل نتحقق من حالة الفوز
+                    if (checkWin()) endGame(true);
+                }
+
+                touchStartElement = null;
+            }
+        }
+
+        // ربط أحداث اللمس
+        puzzle.addEventListener("touchstart", touchStart, { passive: false });
+        puzzle.addEventListener("touchmove", touchMove, { passive: false });
+        puzzle.addEventListener("touchend", touchEnd, { passive: false });
+            
+        }
+    </script>
 </body>
 </html>
